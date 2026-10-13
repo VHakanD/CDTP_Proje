@@ -1,0 +1,34 @@
+# CDTP Robot Izleme - yerel test ortami
+#
+#   docker compose up --build                       -> simulator + web arayuzu
+#   docker compose --profile test run --rm tests    -> analiz + birim testleri
+#
+# Adresler:
+#   Web arayuzu        : http://localhost:8080
+#   Simulator kontrol  : http://localhost:8765
+#   Simulator WebSocket: ws://localhost:8765/ws  (uygulamada "Simulator" hazir ayari)
+
+services:
+  simulator:
+    build: ./tools/robot_simulator
+    ports:
+      - "8765:8765"
+    environment:
+      - PORT=8765
+      - TELEMETRY_HZ=1
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+    ports:
+      - "8080:80"
+    depends_on:
+      - simulator
+
+  tests:
+    profiles: ["test"]
+    build:
+      context: .
+      target: dev
+    command: sh -c "flutter analyze --no-fatal-infos && flutter test"

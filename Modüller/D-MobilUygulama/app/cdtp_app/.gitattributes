@@ -1,0 +1,20 @@
+# Satir sonlarini normallestir (Windows / Linux ekip uyeleri ayni depoda calisir)
+* text=auto eol=lf
+
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Ikili dosyalar
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.mp4 binary
+*.jar binary
+*.wasm binary
+
+# Uretilen kod: diff'lerde katlanir
+*.g.dart linguist-generated=true

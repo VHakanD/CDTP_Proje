@@ -1,0 +1,46 @@
+name: cdtp_robot_app
+description: "YTÜ ÇDTP - İki tekerlekli ev içi hasta destek robotu için mobil izleme ve değerlendirme uygulaması (Modül D)."
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+  flutter: ">=3.27.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # Durum yonetimi ve bagimlilik enjeksiyonu
+  flutter_riverpod: ^2.6.1
+
+  # Yerel veritabani (SQLite) - test raporlari
+  drift: ^2.26.0
+  drift_flutter: ^0.2.4
+
+  # Ayarlar
+  shared_preferences: ^2.5.3
+
+  # Robot baglantisi: Wi-Fi WebSocket (birincil) ve BLE (ikincil)
+  web_socket_channel: ^3.0.3
+  flutter_blue_plus: ^1.35.5
+
+  # Telefon kamerasi: onizleme ve test video kaydi
+  camera: ^0.11.1
+
+  # Dosya yollari, hash
+  path_provider: ^2.1.5
+  path: ^1.9.0
+  crypto: ^3.0.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  drift_dev: ^2.26.0
+  build_runner: ^2.4.15
+
+flutter:
+  uses-material-design: true

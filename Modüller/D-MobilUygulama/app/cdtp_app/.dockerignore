@@ -1,0 +1,10 @@
+.git
+.dart_tool
+build
+android/.gradle
+android/app/build
+ios/Pods
+coverage
+tools/robot_simulator/.dart_tool
+*.pdf
+*.log
