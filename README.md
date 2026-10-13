@@ -80,7 +80,7 @@ Modüller arası veri formatı burada **tek yerde** tanımlanır; değişiklik �
 | 12-13 | Ortak test protokolüyle prova, hata giderme, sonuç kaydı |
 | Final | Proje Pazarı: canlı 5×20 değerlendirme, demonstrasyon, sunum |
 
-Bütçe: hedef ≈ **9.500 TL** (aralık 6.150 – 13.400 TL). Pahalı donanım puan getirmez.
+Bütçe: Belirsiz
 
 ## Çalışma kuralları (iletişim ve merge conflict önleme)
 
