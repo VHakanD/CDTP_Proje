@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../../../data/repositories/robot_repository.dart';
 import '../../../../data/repositories/tracking_repository.dart';
+import '../../../../data/services/tracker/motion_tracker.dart';
 import '../../../../data/services/tracker/sim_tracker.dart';
 import '../../../../domain/models/motion.dart';
 import '../../../core/session_store.dart';
@@ -26,15 +27,37 @@ class SceneViewModel extends ChangeNotifier {
 
   SessionStore get session => _session;
 
+  MotionTracker? _subscribed;
+  bool _disposed = false;
+
   Future<void> init() async {
+    tracking.addListener(_follow);
     await tracking.open();
-    _session.updateScene(_session.scene.copyWith(sensorAspect: tracking.tracker!.sensorAspect));
-    _sub = tracking.tracker!.samples.listen((s) {
-      lastSample = s;
-      notifyListeners();
-    });
+    _follow();
+  }
+
+  /// Kaynak kapanıp yeniden açılınca (Tekrar dene, uygulama arka plandan dönüş)
+  /// yeni kaynağın örneklerine geçer.
+  void _follow() {
+    if (_disposed) return;
+    final t = tracking.tracker;
+    if (identical(t, _subscribed)) return;
+    _sub?.cancel();
+    _sub = null;
+    _subscribed = t;
+    lastSample = null;
+    if (t != null) {
+      _session.updateScene(_session.scene.copyWith(sensorAspect: t.sensorAspect));
+      _sub = t.samples.listen((s) {
+        lastSample = s;
+        notifyListeners();
+      });
+    }
     notifyListeners();
   }
+
+  /// Kamera açılamadıysa yeniden dener.
+  Future<void> retry() => tracking.retry();
 
   bool get robotVisible {
     final s = lastSample;
@@ -103,6 +126,8 @@ class SceneViewModel extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
+    tracking.removeListener(_follow);
     _sub?.cancel();
     super.dispose();
   }

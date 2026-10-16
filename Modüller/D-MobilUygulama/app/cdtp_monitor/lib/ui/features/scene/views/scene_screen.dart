@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -29,7 +31,11 @@ class _SceneScreenState extends State<SceneScreen> {
 
   @override
   void dispose() {
-    _vm?.dispose();
+    final vm = _vm;
+    vm?.dispose();
+    // Test akışı burada başlar: geri tuşu ya da teste sonunda yığının temizlenmesi
+    // bu ekranı kapatır, kamera da onunla bırakılır.
+    if (vm != null) unawaited(vm.tracking.close());
     super.dispose();
   }
 
@@ -110,7 +116,13 @@ class _SceneScreenState extends State<SceneScreen> {
               ),
               if (vm.tracking.error != null) ...[
                 const SizedBox(height: 8),
-                WfBox(dashed: true, child: Text(vm.tracking.error!, style: const TextStyle(fontSize: 12))),
+                WfBox(
+                  dashed: true,
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(vm.tracking.error!, style: const TextStyle(fontSize: 12)),
+                    TextButton(onPressed: vm.retry, child: const Text('Tekrar dene')),
+                  ]),
+                ),
               ],
               if (vm.tracking.isSim) ...[
                 const SizedBox(height: 8),
@@ -154,7 +166,8 @@ class _SceneScreenState extends State<SceneScreen> {
                 ]),
               ),
               const SizedBox(height: 8),
-              OutlinedButton(onPressed: vm.reset, child: const Text('Sıfırla')),
+              // Yalnız sahne ayarlarını siler; robotun konumu simülatör sayfasındaki "Sıfırla" ile.
+              OutlinedButton(onPressed: vm.reset, child: const Text('Sahneyi sıfırla')),
             ],
           );
         },

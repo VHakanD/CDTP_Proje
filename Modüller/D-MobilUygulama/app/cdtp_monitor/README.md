@@ -35,10 +35,23 @@ Testler: `docker compose --profile test run --rm tests`
 ```sh
 flutter pub get
 cd tools/esp32_sim && dart pub get && dart run bin/esp32_sim.dart   # robot simülatörü
-flutter run -d chrome    # ya da: flutter run (Android)
+flutter run -d chrome    # ya da: flutter run -d emulator-5554 (Android)
 ```
+Simülatör adresi uygulamanın nerede çalıştığına göre değişir:
+
+| Uygulama | Simülatör adresi |
+| --- | --- |
+| Tarayıcı (aynı bilgisayar) | `ws://localhost:8765/ws` |
+| Android emülatörü | `ws://10.0.2.2:8765/ws` (hazır seçenek) |
+| Gerçek telefon | `ws://<bilgisayar IP>:8765/ws`; telefon ve bilgisayar aynı Wi-Fi'de |
+
+Uygulamada ekran üstü sürüş düğmesi yoktur (şartname 5.1: komutlar yalnız eldivenden). Robotu
+simülatör sayfasındaki sürüş pedinden (http://localhost:8765) ya da emülatör penceresinde
+W A S D ile sürün. Uygulama dikey kilitlidir ve kamera ekranında ekran kararmaz. Rapor detayındaki
+"Dışa aktar / paylaş" JSON'u Android paylaşım menüsüyle gönderir.
+
 Android telefonda gerçek robot için: telefonu `CDTP-ROBOT` Wi-Fi ağına bağlayın ve
-`ws://192.168.4.1:80/ws` adresini seçin.
+`ws://192.168.4.1:80/ws` adresini seçin. Elle test listesi: [docs/TESTING.md](docs/TESTING.md) §4.
 
 ## Belgeler
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): katmanlar, veri akışı, protokol, kamera takibi

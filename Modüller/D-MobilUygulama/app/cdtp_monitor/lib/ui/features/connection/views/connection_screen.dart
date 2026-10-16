@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -61,7 +62,7 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
                             ? 'Yeniden dene'
                             : 'Bağlan'),
               ),
-              TextButton(onPressed: () => context.go('/reports'), child: const Text('Rapor geçmişi')),
+              TextButton(onPressed: () => context.push('/reports'), child: const Text('Rapor geçmişi')),
             ]),
             children: [
               WfBox(
@@ -74,8 +75,13 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
               const SectionLabel('Bilinen robotlar'),
               WfBox(
                 padding: EdgeInsets.zero,
-                child: Column(children: [
+                // ListTile mürekkebi kutunun arka planının altında kalmasın (debug uyarısı).
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: Column(children: [
                   for (final p in ConnectionViewModel.presets)
+                    // localhost telefonda telefonun kendisidir; simülatöre ulaşamaz.
+                    if (kIsWeb || Uri.parse(p.address).host != 'localhost')
                     ListTile(
                       dense: true,
                       leading: Icon(vm.address == p.address ? Icons.radio_button_checked : Icons.radio_button_off,
@@ -88,8 +94,15 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
                         vm.choose(p.address);
                       },
                     ),
-                ]),
+                  ]),
+                ),
               ),
+              if (!kIsWeb)
+                const Padding(
+                  padding: EdgeInsets.only(top: 4),
+                  child: Text('Telefonda simülatör: ws://<bilgisayar IP>:8765/ws (aynı Wi-Fi)',
+                      style: TextStyle(fontSize: 11, color: AppColors.mid)),
+                ),
               const SectionLabel('Ya da adresi elle gir'),
               TextField(
                 controller: addr,

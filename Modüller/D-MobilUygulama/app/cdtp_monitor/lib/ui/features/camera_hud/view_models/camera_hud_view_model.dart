@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import '../../../../data/repositories/report_repository.dart';
 import '../../../../data/repositories/robot_repository.dart';
 import '../../../../data/repositories/tracking_repository.dart';
+import '../../../../data/services/tracker/motion_tracker.dart';
 import '../../../../domain/models/link_health.dart';
 import '../../../../domain/models/motion.dart';
 import '../../../../domain/models/telemetry.dart';
@@ -56,15 +57,47 @@ class CameraHudViewModel extends ChangeNotifier {
   bool get recording => phase == HudPhase.recording;
   bool get canStart => phase == HudPhase.ready && link.usable && motion.quality != TrackQuality.lost;
 
+  MotionTracker? _subscribed;
+  bool _disposed = false;
+
+  /// Kamera açılamadıysa nedeni (ekranda "Tekrar dene" ile gösterilir).
+  String? get trackingError => tracking.error;
+
   Future<void> init() async {
-    await tracking.open();
     _analyzer = MotionAnalyzer(session.scene);
-    _trackSub = tracking.tracker!.samples.listen(_onSample);
     _telSub = robot.telemetry.listen(_onTelemetry);
     robot.link.addListener(notifyListeners);
+    tracking.addListener(_follow);
     _ticker = Timer.periodic(tickEvery, (_) => _tick());
+    await tracking.open();
+    _follow();
+  }
+
+  /// Takip kaynağı değişince (Tekrar dene, arka plandan dönüş) yenisine abone olur.
+  void _follow() {
+    if (_disposed) return;
+    final t = tracking.tracker;
+    if (identical(t, _subscribed)) {
+      notifyListeners();
+      return;
+    }
+    _trackSub?.cancel();
+    _trackSub = null;
+    _subscribed = t;
+    if (t != null) _trackSub = t.samples.listen(_onSample);
     notifyListeners();
   }
+
+  Future<void> retry() => tracking.retry();
+
+  /// Uygulama arka plana geçti: kayıt yoksa kamerayı bırak.
+  Future<void> pause() async {
+    if (phase == HudPhase.recording || phase == HudPhase.sealing) return;
+    await tracking.close();
+  }
+
+  /// Uygulama öne geldi: kamerayı yeniden aç (açıksa bir şey yapmaz).
+  Future<void> resume() => tracking.open();
 
   void setRatio(FrameRatio r) {
     session.setRatio(r);
@@ -154,10 +187,12 @@ class CameraHudViewModel extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
     _ticker?.cancel();
     _trackSub?.cancel();
     _telSub?.cancel();
     robot.link.removeListener(notifyListeners);
+    tracking.removeListener(_follow);
     super.dispose();
   }
 }

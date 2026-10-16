@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../../app_scope.dart';
 import '../../../../domain/models/test_report.dart';
@@ -21,6 +23,17 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
   ChainCheck? check;
   String? exported;
 
+  /// Dosya uygulamanın özel klasöründedir; kullanıcı ona ancak paylaşım menüsüyle ulaşır.
+  Future<void> _share(String path, String id) async {
+    try {
+      await SharePlus.instance.share(ShareParams(files: [XFile(path)], subject: 'CDTP raporu $id'));
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Paylaşılamadı: $e')));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final reports = AppScope.of(context).reports;
@@ -36,9 +49,11 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
             bottom: FilledButton(
               onPressed: () async {
                 final path = await reports.exportJson(r.id);
+                if (!mounted) return;
                 setState(() => exported = path);
+                if (!kIsWeb) await _share(path, r.id);
               },
-              child: const Text('Dışa aktar (JSON)'),
+              child: const Text('Dışa aktar / paylaş'),
             ),
             children: [
               Row(children: [

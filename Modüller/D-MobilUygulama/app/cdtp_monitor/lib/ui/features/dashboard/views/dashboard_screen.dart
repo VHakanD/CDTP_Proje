@@ -14,10 +14,39 @@ import '../../../core/widgets/wf_parts.dart';
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
+  /// "Bağlantıyı kes" düğmesi ve onaylanan geri tuşu: kamerayı da bırakır.
+  static Future<void> _disconnect(BuildContext context, AppScope scope) async {
+    await scope.robot.disconnect();
+    await scope.tracking.close();
+    if (context.mounted) context.go('/connect');
+  }
+
+  /// Panel akışın köküdür; sistem geri tuşu uygulamayı kapatmak yerine sorar.
+  static Future<void> _confirmBack(BuildContext context, AppScope scope) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text('Bağlantı kesilsin mi?'),
+        content: const Text('Robot bağlantısı kapanır ve bağlantı ekranına dönülür.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Vazgeç')),
+          FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Kes')),
+        ],
+      ),
+    );
+    if (ok == true && context.mounted) await _disconnect(context, scope);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final robot = AppScope.of(context).robot;
-    return Scaffold(
+    final scope = AppScope.of(context);
+    final robot = scope.robot;
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _confirmBack(context, scope);
+      },
+      child: Scaffold(
       appBar: AppBar(
         title: const Text('Ana panel'),
         actions: [
@@ -42,10 +71,7 @@ class DashboardScreen extends StatelessWidget {
                 child: const Text('Görev seç'),
               ),
               TextButton(
-                onPressed: () async {
-                  await robot.disconnect();
-                  if (context.mounted) context.go('/connect');
-                },
+                onPressed: () => _disconnect(context, scope),
                 child: const Text('Bağlantıyı kes'),
               ),
             ]),
@@ -101,6 +127,7 @@ class DashboardScreen extends StatelessWidget {
             ],
           );
         },
+      ),
       ),
     );
   }

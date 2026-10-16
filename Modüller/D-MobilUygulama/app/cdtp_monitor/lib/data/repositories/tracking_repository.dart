@@ -25,13 +25,26 @@ class TrackingRepository extends ChangeNotifier {
   SimTracker? get sim => tracker is SimTracker ? tracker as SimTracker : null;
   bool get ready => tracker != null;
 
-  Future<void> open() async {
-    if (tracker != null) return;
+  /// Açık takip kaynağı hangi bağlantı türü için kuruldu (simülatör mü).
+  bool? _openedForSim;
+  Future<void>? _opening;
+
+  /// Zaten açıksa ve bağlantı türü değişmediyse hiçbir şey yapmaz. Simülatör ↔
+  /// gerçek robot geçişinde eski kaynağı kapatıp yenisini kurar.
+  Future<void> open() => _opening ??= _open().whenComplete(() => _opening = null);
+
+  Future<void> _open() async {
+    final wantSim = kIsWeb || _robot.isSimulator;
+    if (tracker != null) {
+      if (_openedForSim == wantSim) return;
+      await _release();
+    }
     error = null;
+    MotionTracker? t;
     if (trackerFactory != null) {
-      tracker = trackerFactory!();
-    } else if (kIsWeb || _robot.isSimulator) {
-      tracker = SimTracker(_robot.simPose);
+      t = trackerFactory!();
+    } else if (wantSim) {
+      t = SimTracker(_robot.simPose);
     } else {
       try {
         final cams = await availableCameras();
@@ -41,14 +54,24 @@ class TrackingRepository extends ChangeNotifier {
             enableAudio: false, imageFormatGroup: ImageFormatGroup.yuv420);
         await c.initialize();
         camera = c;
-        tracker = ColorMarkerTracker(c, clock: _robot.now);
+        t = ColorMarkerTracker(c, clock: _robot.now);
       } catch (e) {
+        // Gerçek robotta sanal sahne robotu göremez; kaynak boş kalır, "Tekrar dene" gösterilir.
         error = 'Kamera açılamadı: $e. Kamera iznini kontrol edin.';
-        tracker = SimTracker(_robot.simPose); // en azından simülatör konumu çalışsın
       }
     }
-    await tracker!.start();
+    if (t != null) {
+      await t.start();
+      tracker = t;
+      _openedForSim = wantSim;
+    }
     notifyListeners();
+  }
+
+  /// Hata sonrası: kaynağı kapatıp yeniden açar.
+  Future<void> retry() async {
+    await close();
+    await open();
   }
 
   Future<void> startRecording() async {
@@ -67,11 +90,20 @@ class TrackingRepository extends ChangeNotifier {
     return null;
   }
 
+  /// Birden çok kez çağrılabilir (sonuç ekranı, sahne ekranının dispose'u, bağlantı kesme).
   Future<void> close() async {
-    await tracker?.stop();
-    await camera?.dispose();
+    await _opening; // yarıda kalan açılışı bekle; yoksa kamera açık kalır
+    await _release();
+  }
+
+  Future<void> _release() async {
+    final t = tracker, c = camera;
     tracker = null;
     camera = null;
+    _openedForSim = null;
+    error = null;
+    await t?.stop();
+    await c?.dispose();
     notifyListeners();
   }
 }

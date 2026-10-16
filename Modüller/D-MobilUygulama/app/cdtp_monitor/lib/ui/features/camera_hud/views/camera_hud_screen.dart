@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../../../app_scope.dart';
 import '../../../../domain/models/motion.dart';
@@ -21,8 +24,15 @@ class CameraHudScreen extends StatefulWidget {
   State<CameraHudScreen> createState() => _CameraHudScreenState();
 }
 
-class _CameraHudScreenState extends State<CameraHudScreen> {
+class _CameraHudScreenState extends State<CameraHudScreen> with WidgetsBindingObserver {
   CameraHudViewModel? _vm;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _wakelock(true); // test sürerken ekran kararmasın
+  }
 
   @override
   void didChangeDependencies() {
@@ -34,8 +44,44 @@ class _CameraHudScreenState extends State<CameraHudScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _wakelock(false);
     _vm?.dispose();
     super.dispose();
+  }
+
+  /// Arka plana geçince kamerayı bırak (kayıt sürmüyorsa), dönünce yeniden aç.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final vm = _vm;
+    if (vm == null) return;
+    switch (state) {
+      case AppLifecycleState.paused || AppLifecycleState.hidden:
+        unawaited(vm.pause());
+      case AppLifecycleState.resumed:
+        unawaited(vm.resume());
+      case AppLifecycleState.inactive || AppLifecycleState.detached:
+        break; // izin penceresi de "inactive" yapar; kamerayı orada kapatma
+    }
+  }
+
+  /// Eklenti olmayan ortamlarda (widget testleri) sessizce geçer.
+  static void _wakelock(bool on) {
+    try {
+      unawaited((on ? WakelockPlus.enable() : WakelockPlus.disable()).catchError((Object _) {}));
+    } catch (_) {}
+  }
+
+  /// Kayıt sürerken geri engellenir; mühürlenmiş test geri tuşuyla sonuca gider.
+  void _onBlockedPop(CameraHudViewModel vm) {
+    final r = vm.report;
+    if (r != null) {
+      context.go('/result/${r.id}');
+      return;
+    }
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(const SnackBar(content: Text('Kayıt sürerken çıkılamaz — önce testi bitirin')));
   }
 
   Future<void> _confirmStop() async {
@@ -62,7 +108,10 @@ class _CameraHudScreenState extends State<CameraHudScreen> {
         final task = vm.session.task;
         final tall = vm.ratio == FrameRatio.tall;
         return PopScope(
-          canPop: !vm.recording && vm.phase != HudPhase.sealing,
+          canPop: !vm.recording && vm.phase != HudPhase.sealing && vm.report == null,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop) _onBlockedPop(vm);
+          },
           child: Scaffold(
             body: SafeArea(
               child: Padding(
@@ -108,6 +157,15 @@ class _CameraHudScreenState extends State<CameraHudScreen> {
                   ],
                   if (vm.error != null)
                     Text(vm.error!, style: const TextStyle(fontSize: 12, color: AppColors.fail)),
+                  if (vm.trackingError != null)
+                    Row(children: [
+                      Expanded(
+                        child: Text(vm.trackingError!,
+                            key: const Key('tracking-error'),
+                            style: const TextStyle(fontSize: 12, color: AppColors.fail)),
+                      ),
+                      TextButton(onPressed: vm.retry, child: const Text('Tekrar dene')),
+                    ]),
                   const SizedBox(height: 8),
                   _ActionButton(vm, onStop: _confirmStop),
                 ]),

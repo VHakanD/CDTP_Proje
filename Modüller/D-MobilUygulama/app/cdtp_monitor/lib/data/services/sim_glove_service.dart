@@ -12,7 +12,7 @@ class SimGloveService {
   Uri? _uri;
   int _seq = 0;
 
-  /// Bağlıyken son gönderilen komut (rozette gösterilir); bağlı değilken null.
+  /// Bağlıyken son gönderilen komut; bağlı değilken null.
   final lastCmd = ValueNotifier<String?>(null);
   final connected = ValueNotifier<bool>(false);
 
