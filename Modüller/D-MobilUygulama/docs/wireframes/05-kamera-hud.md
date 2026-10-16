@@ -15,6 +15,44 @@ HUD yerleşimi henüz kesinleşmediği için **iki varyant** çizilmiştir:
 
 Her iki varyant da dikey ve yatay tutuşta gösterilmiştir. Öğe numaraları iki varyantta aynıdır.
 
+## Karar: Varyant B, yön göstergesi sol kenarda
+Ekip **Varyant B**'yi seçti. Fark: büyük yön oku üstten kaldırıldı; küçük bir kutu olarak
+kamera görüntüsünün **sol kenarına, dikey ortaya** alındı. Böylece görüntünün ortası ve robot
+kapanmaz. Kamera görüntüsü **1:1** varsayılandır; **4:3** ve **9:16** seçilebilir [13].
+9:16'da bilgi şeridi görüntünün üstüne biner. Tıklanabilir hâli: [html/index.html](html/index.html#s5).
+
+```text
+┌──────────────────────────────────────┐
+│ ● KAYIT 00:12 [1]  ● Bağlı 0,4 s [2] │
+│ Görev B           [1:1] 4:3 9:16 [13]│
+│ ┌──────────────────────────────────┐ │
+│ │ [8]                              │ │
+│ │            Robot görünüyor %92   │ │
+│ │ ┌────┐         ┌───────┐  [12]   │ │
+│ │ │ ▲  │         │ ROBOT │ [7]     │ │
+│ │ │███ │         └───────┘         │ │
+│ │ │İLERİ         ·                 │ │
+│ │ └────┘[9]      ·                 │ │
+│ │               ·                  │ │
+│ │              ×  başlangıç        │ │
+│ └──────────────────────────────────┘ │
+│ ┌───────────┬───────────┬──────────┐ │
+│ │ SÜRE  [3] │ PİL   [4] │ EĞİM [5] │ │
+│ │ 00:12,4   │ %72 · yok │ +3,4°    │ │
+│ ├───────────┴───────────┴──────────┤ │
+│ │ DURUM  [6]   hareket ediyor      │ │
+│ │ MESAFE [11]  0,64 m / 0,8–1,2 m  │ │
+│ └──────────────────────────────────┘ │
+│    ┌────────────────────────────┐    │
+│    │    ■  TESTİ BİTİR  [10]    │    │
+│    └────────────────────────────┘    │
+└──────────────────────────────────────┘
+```
+
+13. **Görüntü oranı seçici:** 1:1 (varsayılan) / 4:3 / 9:16.
+
+Aşağıdaki A ve B çizimleri karşılaştırma için korunmuştur.
+
 ## Hazır durumu (test başlamadı)
 04'ten gelindiğinde ekran bu durumda açılır. HUD değerleri canlıdır ama sayaç 0'da
 bekler ve kayıt yapılmaz.

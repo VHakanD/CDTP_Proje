@@ -1,0 +1,6 @@
+build/
+.dart_tool/
+.idea/
+*.iml
+android/.gradle/
+tools/esp32_sim/.dart_tool/

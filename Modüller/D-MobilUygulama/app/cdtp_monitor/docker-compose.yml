@@ -1,0 +1,38 @@
+# cdtp_monitor - yerel gelistirme ortami
+#
+#   docker compose up --build                     -> simulator + canli uygulama
+#   docker compose --profile test run --rm tests  -> analiz + testler
+#
+# Adresler:
+#   Uygulama (canli)    : http://localhost:8080
+#   Demo (Gorev B HUD)  : http://localhost:8080/?demo=B#/camera
+#   Simulator kontrol   : http://localhost:8765   (eldiven dugmeleri + senaryolar)
+#   Simulator WebSocket : ws://localhost:8765/ws
+
+services:
+  sim:
+    build: ./tools/esp32_sim
+    ports:
+      - "8765:8765"
+    restart: unless-stopped
+
+  app:
+    build:
+      context: .
+      target: dev
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./lib:/app/lib
+      - ./test:/app/test
+      - ./web:/app/web
+    depends_on:
+      - sim
+    tty: true
+    stdin_open: true
+
+  tests:
+    profiles: ["test"]
+    build:
+      context: .
+      target: test

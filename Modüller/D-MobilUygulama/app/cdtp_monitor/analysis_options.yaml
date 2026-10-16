@@ -1,0 +1,9 @@
+# Flutter önerilen lint kuralları.
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - build/**
+    - android/**
+    - web/**
+    - tools/** # simülatör ayrı bir Dart paketi; kendi analysis_options'ı var

@@ -44,11 +44,12 @@ Telefon uygulamasıyla robotun şarj durumunu ve güncel eğim açısını göst
 ## Tasarım kararları
 | Konu | Karar | Not |
 | --- | --- | --- |
-| Platform / framework | _Flutter / Kotlin / React Native ..._ | |
-| Robot ↔ telefon bağlantısı | _BLE / Wi-Fi ..._ | Robot tarafı firmware ile birlikte |
-| Görüntü işleme yöntemi | _OpenCV renk/marker takibi, ML ..._ | |
-| Mesafe ölçeği | _zemin marker'ı / bilinen boyut ..._ | |
-| Değiştirilemez kayıt | _hash zinciri / imzalı dosya ..._ | |
+| Platform / framework | Flutter (Android) · go_router · MVVM | `app/cdtp_monitor` |
+| Robot ↔ telefon bağlantısı | ESP32-S3 Wi-Fi, WebSocket JSON (protokol v1) | Eldiven ↔ robot: ESP-NOW önerisi |
+| Görüntü işleme yöntemi | Robot üstünde macenta renk işareti, telefonda YUV eşik + ağırlık merkezi | Robot olmadan: simülatör sahnesi |
+| Mesafe ölçeği | Zemindeki 1 m işaretin iki ucuna dokunma (P1–P2) | Sahne hazırlama ekranı |
+| Değiştirilemez kayıt | SHA-256 hash zinciri, yalnız ekleme | Dışa aktarma: JSON |
+| Kamera görünümü | HUD Varyant B, yön göstergesi sol kenarda; 1:1 varsayılan, 4:3 ve 9:16 seçilebilir | `docs/wireframes/html/` |
 
 ## Diğer modüllere arayüz
 - **← Modül A:** eğim açısı (°), 1 Hz
@@ -60,7 +61,10 @@ Telefon uygulamasıyla robotun şarj durumunu ve güncel eğim açısını göst
 D-MobilUygulama/
 ├── README.md
 ├── parts/        # parça listesi (parca-listesi.md)
-├── app/          # mobil uygulama kaynak kodu
+├── app/
+│   ├── cdtp_app/      # ilk altyapı (wireframe'den bağımsız)
+│   └── cdtp_monitor/  # wireframe uyumlu uygulama + ESP32-S3 simülatörü + Docker
 ├── vision/       # görüntü işleme denemeleri / modeller
-└── docs/         # ekran tasarımları, test kayıtları
+└── docs/
+    └── wireframes/    # ekran wireframe'leri (.md) + html/index.html
 ```

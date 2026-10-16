@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CDTP Modül D Wireframe</title>
+<style>
+  :root {
+    --paper: #ffffff;
+    --desk: #f2f2f0;
+    --ink: #2b2b2b;
+    --mid: #6e6e6e;
+    --line: #9a9a9a;
+    --hair: #d4d4d4;
+    --fill: #ececec;
+    --scene: #3c3d3f;
+    --scene-ink: #f4f4f4;
+    --note: #2f5fd0;
+    --mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #1f2022; --desk: #151617; --ink: #e6e6e6; --mid: #a3a3a3;
+      --line: #6f6f6f; --hair: #3a3b3d; --fill: #2b2c2e; --scene: #0e0f10;
+      --scene-ink: #f4f4f4; --note: #7ea2ff;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #1f2022; --desk: #151617; --ink: #e6e6e6; --mid: #a3a3a3;
+    --line: #6f6f6f; --hair: #3a3b3d; --fill: #2b2c2e; --scene: #0e0f10;
+    --scene-ink: #f4f4f4; --note: #7ea2ff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: var(--desk); color: var(--ink); font: 13px/1.45 var(--mono); }
+  button { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--note); outline-offset: 2px; }
+
+  /* top tabs */
+  .tabs { position: sticky; top: 0; z-index: 10; display: flex; align-items: stretch;
+    height: 40px; background: var(--paper); border-bottom: 1px solid var(--line); overflow-x: auto; }
+  .tabs .brand { padding: 0 14px; display: flex; align-items: center; border-right: 1px solid var(--hair);
+    color: var(--mid); white-space: nowrap; font-size: 11px; }
+  .tabs button { border: 0; background: none; padding: 0 14px; white-space: nowrap; cursor: pointer;
+    color: var(--mid); border-bottom: 2px solid transparent; font-size: 12px; }
+  .tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); font-weight: 700; }
+  .tabs .spacer { flex: 1; }
+  .tabs .tool { border-left: 1px solid var(--hair); }
+
+  main { padding: 24px 16px 64px; max-width: 1180px; margin: 0 auto; }
+  .screen-head h1 { font-size: 18px; margin: 0 0 4px; }
+  .screen-head p { margin: 0 0 16px; color: var(--mid); max-width: 72ch; }
+
+  .stage { display: grid; grid-template-columns: 380px minmax(0, 1fr); gap: 32px; align-items: start; }
+  @media (max-width: 860px) { .stage { grid-template-columns: 1fr; } }
+
+  .states { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .states button { border: 1px solid var(--line); background: var(--paper); border-radius: 4px;
+    padding: 3px 9px; cursor: pointer; font-size: 11px; color: var(--mid); }
+  .states button[aria-pressed="true"] { border-color: var(--ink); color: var(--ink); font-weight: 700; }
+  .states .label { color: var(--mid); font-size: 11px; align-self: center; margin-right: 2px; }
+
+  /* phone */
+  .phone { width: 360px; max-width: 100%; height: 760px; background: var(--paper); border: 2px solid var(--ink);
+    border-radius: 30px; padding: 14px 10px; position: relative; overflow: hidden; }
+  .phone::before { content: ""; position: absolute; top: 6px; left: 50%; width: 64px; height: 5px;
+    margin-left: -32px; border-radius: 3px; background: var(--hair); }
+  .screen { height: 100%; overflow-y: auto; padding: 8px 6px; display: flex; flex-direction: column; gap: 10px; }
+  .screen.flush { padding: 8px 0 0; }
+
+  /* wireframe atoms */
+  .bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .title { font-weight: 700; font-size: 14px; }
+  .muted { color: var(--mid); }
+  .small { font-size: 11px; }
+  .rule { border-top: 1px solid var(--hair); }
+  .box { border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
+  .box.dashed { border-style: dashed; }
+  .group-label { font-size: 11px; color: var(--mid); margin-bottom: -4px; }
+  .row { display: flex; justify-content: space-between; gap: 8px; }
+  .list > * + * { border-top: 1px solid var(--hair); }
+  .list > * { padding: 7px 0; }
+  .btn { display: block; width: 100%; border: 1px solid var(--line); background: var(--paper);
+    border-radius: 4px; padding: 9px; text-align: center; cursor: pointer; }
+  .btn.primary { background: var(--ink); color: var(--paper); border-color: var(--ink); font-weight: 700; }
+  .btn.primary[disabled] { background: var(--fill); color: var(--mid); border-color: var(--hair); cursor: not-allowed; }
+  .btns { display: flex; gap: 8px; }
+  .btns .btn { flex: 1; }
+  .link { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+  .meter { height: 10px; border: 1px solid var(--line); border-radius: 2px; position: relative; overflow: hidden; }
+  .meter > i { position: absolute; inset: 0 auto 0 0; background: var(--line); }
+  .chip { display: inline-block; border: 1px solid var(--line); border-radius: 3px; padding: 0 5px; font-size: 11px; }
+  .chip.solid { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--ink); vertical-align: 1px; }
+  .dot.hollow { background: none; border: 1px solid var(--ink); }
+  .check { display: flex; gap: 6px; align-items: baseline; }
+  .check::before { content: "[ ]"; color: var(--mid); }
+  .check.on::before { content: "[x]"; color: var(--ink); }
+  .field { border: 1px solid var(--line); border-radius: 4px; padding: 5px 8px; color: var(--mid); }
+  .placeholder { background: var(--fill); border: 1px solid var(--hair); border-radius: 6px; position: relative;
+    display: flex; align-items: center; justify-content: center; color: var(--mid); overflow: hidden; }
+  .placeholder svg.x { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .verdict { border: 2px solid var(--ink); border-radius: 6px; padding: 14px; text-align: center; }
+  .verdict b { display: block; font-size: 24px; letter-spacing: .3em; }
+  .verdict.fail { border-style: dashed; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { text-align: left; font-weight: 400; color: var(--mid); border-bottom: 1px solid var(--line); padding: 4px 0; }
+  td { padding: 4px 0; border-bottom: 1px solid var(--hair); vertical-align: top; }
+  td.r, th.r { text-align: right; }
+
+  /* annotation markers */
+  .n { display: inline-flex; align-items: center; justify-content: center; min-width: 17px; height: 17px;
+    padding: 0 3px; border-radius: 9px; background: var(--note); color: #fff; font-size: 10px;
+    font-weight: 700; vertical-align: 1px; margin-left: 4px; }
+  body.no-notes .n { display: none; }
+  .notes { background: var(--paper); border: 1px solid var(--hair); border-radius: 8px; padding: 16px 18px; }
+  .notes h2 { font-size: 13px; margin: 0 0 10px; }
+  .notes ol { margin: 0; padding: 0; list-style: none; }
+  .notes li { display: grid; grid-template-columns: 26px 1fr; gap: 6px; padding: 6px 0; border-top: 1px solid var(--hair); }
+  .notes li:first-child { border-top: 0; }
+  .notes li .n { margin: 2px 0 0; }
+  .notes .src { margin-top: 14px; font-size: 11px; color: var(--mid); }
+
+  /* camera / HUD */
+  .cam { position: relative; background: var(--scene); color: var(--scene-ink); overflow: hidden;
+    border-radius: 6px; width: 100%; transition: aspect-ratio .25s ease; }
+  @media (prefers-reduced-motion: reduce) { .cam { transition: none; } }
+  .cam .grid { position: absolute; inset: 0; background-image:
+      linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px);
+    background-size: 24px 24px; }
+  .cam .floor { position: absolute; left: 0; right: 0; bottom: 0; height: 38%;
+    background: linear-gradient(to bottom, transparent, rgba(255,255,255,.07)); }
+  .cam .hud-top { position: absolute; top: 8px; left: 8px; right: 8px; display: flex; justify-content: space-between;
+    font-size: 11px; }
+  .cam .pill { background: rgba(0,0,0,.55); border-radius: 4px; padding: 2px 6px; }
+  .robot { position: absolute; width: 58px; height: 46px; border: 2px solid var(--scene-ink); border-radius: 4px;
+    display: flex; align-items: center; justify-content: center; font-size: 10px; }
+  .robot .conf { position: absolute; bottom: calc(100% + 4px); left: 50%; transform: translateX(-50%);
+    white-space: nowrap; font-size: 10px; }
+  .robot.lost { border-style: dashed; opacity: .6; }
+  .trail { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .start-x { position: absolute; font-size: 12px; }
+  .dir { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); width: 62px;
+    background: rgba(0,0,0,.6); border: 1px solid rgba(255,255,255,.5); border-radius: 6px;
+    padding: 6px 4px; text-align: center; cursor: pointer; color: var(--scene-ink); }
+  .dir svg { width: 40px; height: 40px; display: block; margin: 0 auto 2px; }
+  .dir b { font-size: 11px; letter-spacing: .05em; }
+  .lost-banner { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%);
+    border: 2px dashed var(--scene-ink); padding: 6px 10px; background: rgba(0,0,0,.6); font-weight: 700; }
+  .strip { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--line); border-radius: 6px; font-size: 12px; }
+  .strip > div { padding: 5px 7px; }
+  .strip > div + div { border-left: 1px solid var(--hair); }
+  .strip .wide { grid-column: 1 / -1; border-left: 0 !important; border-top: 1px solid var(--hair); display: flex; justify-content: space-between; }
+  .strip .k { color: var(--mid); font-size: 10px; display: block; }
+  .cam .strip { position: absolute; left: 8px; right: 8px; bottom: 8px; background: rgba(0,0,0,.6);
+    border-color: rgba(255,255,255,.4); color: var(--scene-ink); }
+  .cam .strip .k { color: #c9c9c9; }
+  .cam .strip > div + div, .cam .strip .wide { border-color: rgba(255,255,255,.25); }
+
+  /* overview */
+  .flow { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 28px 20px; }
+  .thumb { cursor: pointer; display: block; }
+  .thumb .cap span { display: block; }
+  .thumb .frame { width: 216px; height: 456px; overflow: hidden; border-radius: 18px; }
+  .thumb .phone { width: 360px; max-width: none; transform: scale(.6); transform-origin: top left; pointer-events: none; }
+  .screen > .n, .btns > .n { align-self: flex-end; margin-top: -6px; }
+  .btns { align-items: center; }
+  .thumb .cap { margin-top: 8px; }
+  .thumb .cap b { display: block; }
+  .flowline { background: var(--paper); border: 1px solid var(--hair); border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; overflow-x: auto; white-space: pre; font-size: 12px; }
+</style>
+</head>
+<body>
+<nav class="tabs" role="tablist" aria-label="Ekranlar" id="tabs"></nav>
+<main id="main"></main>
+
+<script>
+/* ---------- veri ---------- */
+const TASKS = {
+  A: { name: "Statik Denge", mod: "A", goal: "30 s dengede kalma", end: "30 s dolunca ya da denge bozulunca" },
+  B: { name: "Robot Yönlendirmesi", mod: "B", goal: "doğru yön + 0,8–1,2 m", end: "robot durunca" },
+  C: { name: "Şarj Etme", mod: "C", goal: "şarj başlangıcı ≤ 5 s içinde tespit", end: "şarj başlayınca" },
+  E: { name: "Bütünleşik Görev", mod: "E", goal: "ilaç kutusu düşmeden hedefe", end: "robot hedefte durunca" },
+};
+const DIRS = ["İLERİ", "SAĞ", "GERİ", "SOL", "DURUYOR"];
+const DIR_ROT = { "İLERİ": 0, "SAĞ": 90, "GERİ": 180, "SOL": 270 };
+
+const state = {
+  tab: "flow",
+  s1: "idle", s2: "ok", s3: { task: "B", dir: "İleri" }, s4: "done",
+  s5: { mode: "rec", ratio: "1:1", dir: 0 }, s6: "pass", s7: "list",
+};
+
+const n = (x) => `<span class="n" aria-label="not ${x}">${x}</span>`;
+const badge = (k) => ({
+  ok:    `<span class="dot"></span> Bağlı · son paket 0,4 s`,
+  slow:  `<span class="dot hollow"></span> Gecikme · 1,7 s`,
+  lost:  `<span class="dot hollow"></span> Koptu · 3,2 s`,
+})[k];
+const xbox = (label, h) => `<div class="placeholder" style="height:${h}px">
+  <svg class="x" preserveAspectRatio="none"><line x1="0" y1="0" x2="100%" y2="100%" stroke="currentColor" stroke-opacity=".25"/><line x1="100%" y1="0" x2="0" y2="100%" stroke="currentColor" stroke-opacity=".25"/></svg>
+  <span style="position:relative;background:var(--fill);padding:0 4px">${label}</span></div>`;
+
+/* ---------- ekranlar ---------- */
+const SCREENS = [
+{
+  id: "s1", tab: "01 Bağlantı", title: "01 · Bağlantı",
+  lead: "Robotun ESP32-S3 kartına Wi-Fi üzerinden bağlanır. Robot ağda mDNS ile bulunur, bulunamazsa IP elle girilir.",
+  states: [["idle","Bağlı değil"],["busy","Bağlanıyor"],["done","Bağlandı"],["err","Hata"]],
+  render(s) {
+    const checks = { idle:[0,0,0], busy:[1,1,0], done:[1,1,1], err:[1,0,0] }[s];
+    const status = { idle:`<span class="dot hollow"></span> Bağlı değil`, busy:`<span class="dot hollow"></span> Bağlanıyor…`,
+      done:`<span class="dot"></span> Bağlı ve doğrulandı`, err:`<span class="dot hollow"></span> Bağlantı kurulamadı` }[s];
+    return `<div class="screen">
+      <div class="bar"><span class="title">Robot bağlantısı</span>${n(1)}</div>
+      <div class="box">${status}${n(2)}<div class="small muted">Telefon Wi-Fi: CDTP-Lab</div></div>
+      <div class="group-label">Bulunan robotlar${n(3)}</div>
+      <div class="box list">
+        <div class="row"><span><span class="dot"></span> CDTP-Robot-01</span><span class="muted small">192.168.4.1 · güçlü</span></div>
+        <div class="row"><span><span class="dot hollow"></span> CDTP-Eldiven-01</span><span class="muted small">komut yayını · bağlanılmaz</span></div>
+      </div>
+      <div class="btns"><button class="btn">Yeniden tara</button>${n(4)}</div>
+      <div class="group-label">Ya da adresi elle gir</div>
+      <div class="field">ws://192.168.4.1:81/telemetry</div>
+      ${s === "err" ? `<div class="box dashed small">Robot 5 s içinde yanıt vermedi. Telefonun robotla aynı Wi-Fi ağında olduğunu kontrol edin, sonra yeniden deneyin.</div>` : ""}
+      <button class="btn primary" ${s==="busy"?"disabled":""}>${s==="done"?"Ana panele geç":s==="err"?"Yeniden dene":"Bağlan"}</button>${n(5)}
+      <div class="group-label">Bağlantı doğrulama${n(6)}</div>
+      <div class="box">
+        <div class="check ${checks[0]?"on":""}">Robot bulundu</div>
+        <div class="check ${checks[1]?"on":""}">WebSocket açıldı</div>
+        <div class="check ${checks[2]?"on":""}">İlk telemetri paketi alındı</div>
+      </div>
+      <span class="link" data-go="s7">Rapor geçmişi</span>${n(7)}
+    </div>`;
+  },
+  notes: [
+    "Başlık. Uygulama bu ekranla açılır.",
+    "Bağlantı durumu tek satırda; altında telefonun bağlı olduğu Wi-Fi ağı.",
+    "mDNS ile bulunan cihazlar. Eldiven listede görünür ama uygulama ona bağlanmaz; eldiven yalnız robota komut yollar.",
+    "Ağı yeniden tarar.",
+    "Bağlan → üç adım sırayla işaretlenir. Hepsi tamam olunca ana panele geçilir.",
+    "Doğrulama listesi: robot bulundu, WebSocket açıldı, ilk telemetri geldi.",
+    "Bağlantı olmadan da eski raporlar açılabilir.",
+  ],
+},
+{
+  id: "s2", tab: "02 Ana panel", title: "02 · Ana panel / canlı sensör",
+  lead: "Şarj, pil ve eğim 1 Hz ile gelir. Bağlantı sağlığı çubuğu 2 s kopma sınırına göre dolar.",
+  states: [["ok","Normal"],["slow","Gecikme (1,5–2 s)"],["lost","Koptu (> 2 s)"]],
+  render(s) {
+    const age = { ok: 0.4, slow: 1.7, lost: 3.2 }[s];
+    const pct = Math.min(100, age / 2 * 100);
+    const stale = s === "lost";
+    return `<div class="screen">
+      <div class="bar"><span class="title">Ana panel</span><span class="small muted">CDTP-Robot-01</span></div>
+      <div class="small">${badge(s)}${n(1)}</div>
+      ${stale ? `<div class="box dashed small">Bağlantı 2 s'den uzun süredir yok. Değerler son alınan paketten; yeniden bağlanılıyor…</div>` : ""}
+      <div class="group-label">Şarj ve pil${n(2)}</div>
+      <div class="box"><div class="row"><span>Pil</span><b>%72</b></div><div class="meter"><i style="width:72%"></i></div>
+        <div class="small muted" style="margin-top:4px">Şarj: şarj olmuyor</div></div>
+      <div class="group-label">Eğim açısı${n(3)}</div>
+      <div class="box">
+        <div class="row"><span>Anlık</span><b>+3,4°</b></div>
+        <svg viewBox="0 0 300 40" width="100%" height="40" aria-hidden="true">
+          <line x1="10" y1="20" x2="290" y2="20" stroke="currentColor"/>
+          ${[10,80,150,220,290].map(x=>`<line x1="${x}" y1="14" x2="${x}" y2="26" stroke="currentColor"/>`).join("")}
+          <text x="150" y="38" font-size="9" text-anchor="middle" fill="currentColor">0°</text>
+          <text x="10" y="38" font-size="9" fill="currentColor">-30</text><text x="275" y="38" font-size="9" fill="currentColor">+30</text>
+          <path d="M166 4 l6 10 h-12z" fill="currentColor"/>
+        </svg>
+      </div>
+      <div class="group-label">Eğim, son 60 s${n(4)}</div>
+      <div class="box"><svg viewBox="0 0 300 70" width="100%" height="70" aria-hidden="true">
+        <line x1="0" y1="35" x2="300" y2="35" stroke="currentColor" stroke-opacity=".3" stroke-dasharray="3 3"/>
+        <polyline fill="none" stroke="currentColor" stroke-width="1.5" points="0,36 20,33 40,40 60,30 80,35 100,22 120,20 140,34 160,42 180,37 200,33 220,36 240,30 260,34 ${stale?"":"280,32 300,30"}"/>
+        <text x="0" y="68" font-size="9" fill="currentColor">-60 s</text><text x="300" y="68" font-size="9" text-anchor="end" fill="currentColor">şimdi</text>
+      </svg></div>
+      <div class="group-label">Bağlantı sağlığı${n(5)}</div>
+      <div class="box small">
+        <div class="row"><span>Son paket</span><span>${age.toFixed(1).replace(".",",")} s önce</span></div>
+        <div class="row"><span>Paket hızı</span><span>${stale ? "0,0" : "1,0"} Hz</span></div>
+        <div class="meter" style="margin-top:5px"><i style="width:${pct}%"></i></div>
+        <div class="row muted"><span>0 s</span><span>kopma sınırı 2 s</span></div>
+      </div>
+      <button class="btn primary" ${stale?"disabled":""} data-go="s3">Görev seç</button>${n(6)}
+      <div class="row small"><span class="link" data-go="s7">Rapor geçmişi</span><span class="link" data-go="s1">Bağlantıyı kes</span></div>
+    </div>`;
+  },
+  notes: [
+    "Bağlantı rozeti: ≤ 1,5 s bağlı, 1,5–2 s gecikme, > 2 s koptu. Eşikler ekibin seçimi (şartname yalnız 2 s'yi zorunlu tutar).",
+    "Pil yüzdesi ve şarj durumu (C modülünden, 1 Hz).",
+    "Anlık eğim açısı göstergesi (A modülünden, 1 Hz).",
+    "Son 60 s'lik eğim grafiği. Kopmada çizgi durur.",
+    "Son paketten bu yana geçen süre; çubuk 2 s'de dolar.",
+    "Bağlantı koptuysa görev seçimi kapalıdır.",
+  ],
+},
+{
+  id: "s3", tab: "03 Görev seçimi", title: "03 · Görev seçimi",
+  lead: "Dört görevden biri seçilir. Görev B için beklenen yön de seçilir; değerlendirme bu yöne göre yapılır.",
+  states: [],
+  render(s) {
+    const card = (k) => {
+      const t = TASKS[k], sel = s.task === k;
+      return `<button class="box" data-task="${k}" style="text-align:left;background:${sel?"var(--fill)":"var(--paper)"};cursor:pointer;width:100%">
+        <div class="row"><span><span class="dot ${sel?"":"hollow"}"></span> ${t.name}</span><span class="chip">Modül ${t.mod}</span></div>
+        <div class="small">Başarı: ${t.goal}</div>
+        <div class="small muted">Bitiş: ${t.end}</div>
+        ${k==="B" && sel ? `<div class="row small" style="margin-top:6px"><span>Beklenen yön${n(3)}</span>
+          <span>${["İleri","Geri","Sağ","Sol"].map(d=>`<span class="chip ${s.dir===d?"solid":""}" data-dir="${d}">${d}</span>`).join(" ")}</span></div>` : ""}
+      </button>`;
+    };
+    return `<div class="screen">
+      <div class="bar"><span class="title"><span class="link" data-go="s2">←</span> Görev seçimi</span>${n(1)}</div>
+      <div class="small muted">${badge("ok")} · pil %72 · +0,8°</div>
+      <div class="group-label">Bir görev seçin${n(2)}</div>
+      ${["A","B","C","E"].map(card).join("")}
+      <button class="btn primary" data-go="s4">Sahne hazırlamaya geç</button>${n(4)}
+    </div>`;
+  },
+  notes: [
+    "Geri oku ana panele döner. Altında kısa bağlantı rozeti.",
+    "Tek seçimli görev kartları: başarı ölçütü ve otomatik bitiş koşulu yazılı. Karta tıklayarak deneyin.",
+    "Yalnız Görev B: İleri / Geri / Sağ / Sol. Kameradan algılanan yön bununla karşılaştırılır.",
+    "Görev seçilmeden pasiftir.",
+  ],
+},
+{
+  id: "s4", tab: "04 Sahne", title: "04 · Kamera kalibrasyonu / sahne hazırlama",
+  lead: "Telefon sabitlenir, zemindeki bilinen uzunluktaki işaretin iki ucuna dokunularak piksel→metre ölçeği alınır.",
+  states: [["done","Tüm adımlar tamam"],["miss","Eksik adım"]],
+  render(s) {
+    const done = s === "done";
+    return `<div class="screen">
+      <div class="bar"><span class="title"><span class="link" data-go="s3">←</span> Sahne hazırlama</span><span class="chip">Görev C</span>${n(1)}</div>
+      <div class="cam" style="aspect-ratio:1/1">
+        <div class="grid"></div><div class="floor"></div>
+        <svg class="trail" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <line x1="14" y1="20" x2="78" y2="20" stroke="#fff" stroke-width=".6"/>
+          <circle cx="14" cy="20" r="1.8" fill="#fff"/><circle cx="78" cy="20" r="1.8" fill="#fff"/>
+          ${done?`<rect x="62" y="64" width="28" height="22" fill="none" stroke="#fff" stroke-width=".5" stroke-dasharray="2 2"/>`:""}
+        </svg>
+        <div class="start-x" style="left:12%;top:23%;font-size:10px">P1 — 1,00 m — P2 ${n(2)}</div>
+        <div class="robot ${done?"":"lost"}" style="left:22%;top:52%">ROBOT<span class="conf">${done?"algılandı":"aranıyor…"}</span></div>
+        ${n(3)}
+        ${done?`<div class="start-x" style="left:63%;top:88%;font-size:10px">şarj bölgesi</div>`:""}
+      </div>
+      <div class="box small">
+        <div class="check on">1. Telefon sabit, alan kadrajda ${n(4)}</div>
+        <div class="check ${done?"on":""}">2. Ölçek: P1–P2 = <u>1,00</u> m → ${done?"412 px/m":"—"} ${n(5)}</div>
+        <div class="check ${done?"on":""}">3. Robot kadrajda ${n(6)}</div>
+        <div class="check ${done?"on":""}">4. Hedef / şarj bölgesi çizildi (C ve E) ${n(7)}</div>
+      </div>
+      ${done?"":`<div class="box dashed small">Robot görünmüyor. Robotu kadrajın ortasına alın ya da telefonu biraz uzaklaştırın.</div>`}
+      <div class="btns"><button class="btn">Sıfırla</button></div>
+      <button class="btn primary" ${done?"":"disabled"} data-go="s5">Kamera ekranına geç</button>${n(8)}
+    </div>`;
+  },
+  notes: [
+    "Seçili görev başlıkta görünür; gereken adımlar göreve göre değişir.",
+    "P1 ve P2: zemindeki işaretin iki ucuna dokunulur. Mesafe ölçümü bu ölçeğe dayanır.",
+    "Robot algılanınca başlangıç konumu kaydedilir.",
+    "Telefon sabit olmalı; test sırasında oynarsa ölçek bozulur.",
+    "Ölçek B ve E için zorunlu; mesafe 0,8–1,2 m bu ölçekle ölçülür.",
+    "Görüntü işleme robotu buldu mu?",
+    "C: 30 cm / 90° yaklaşma bölgesi ve şarj istasyonu; E: hedef nokta.",
+    "Eksik adım varsa pasif.",
+  ],
+},
+{
+  id: "s5", tab: "05 Kamera + HUD", title: "05 · Kamera + HUD (Varyant B)",
+  lead: "Varyant B seçildi; yön göstergesi küçültülüp sol kenara alındı, robotun önü açık kalır. Görüntü 1:1 varsayılan, 4:3 ve 9:16 seçilebilir.",
+  states: [["ready","Hazır"],["rec","Kayıtta"],["lost","Robot kayboldu + kopma"],["auto","Otomatik bitiş"]],
+  render(s) {
+    const m = s.mode, ratio = s.ratio, dir = DIRS[s.dir];
+    const ar = { "1:1": "1/1", "4:3": "3/4", "9:16": "9/16" }[ratio];
+    const tall = ratio === "9:16";
+    const rec = m === "rec" || m === "lost";
+    const arrow = dir === "DURUYOR"
+      ? `<svg viewBox="0 0 40 40"><rect x="8" y="17" width="24" height="6" fill="currentColor"/></svg>`
+      : `<svg viewBox="0 0 40 40"><g transform="rotate(${DIR_ROT[dir]} 20 20)"><path d="M20 3 L34 20 H25 V37 H15 V20 H6 Z" fill="currentColor"/></g></svg>`;
+    const strip = `<div class="strip">
+        <div><span class="k">Süre ${n(3)}</span>${m==="ready"?"00:00,0":m==="auto"?"00:14,2":"00:12,4"}</div>
+        <div><span class="k">Pil ${n(4)}</span>%72 · yok</div>
+        <div><span class="k">Eğim ${n(5)}</span>${m==="lost"?"+3,1° (eski)":"+3,4°"}</div>
+        <div class="wide"><span><span class="k">Durum ${n(6)}</span>${m==="ready"?"statik denge":m==="auto"?"statik denge":"hareket ediyor"}</span>
+          <span style="text-align:right"><span class="k">Mesafe ${n(11)}</span>${m==="ready"?"0,00":m==="auto"?"0,97":"0,64"} m / 0,8–1,2</span></div>
+      </div>`;
+    return `<div class="screen flush">
+      <div class="bar small" style="padding:0 6px">
+        <span>${rec?`<span class="dot"></span> Kayıt 00:12`:m==="auto"?`<span class="dot hollow"></span> Kayıt kapandı`:`<span class="dot hollow"></span> Kayıt yok`}${n(1)}</span>
+        <span>${badge(m==="lost"?"lost":"ok")}${n(2)}</span>
+      </div>
+      <div class="bar small" style="padding:0 6px"><span>Görev B · Robot Yönlendirmesi</span>
+        <span class="states" style="margin:0" role="group" aria-label="Görüntü oranı">
+          ${["1:1","4:3","9:16"].map(r=>`<button data-ratio="${r}" aria-pressed="${r===ratio}">${r}</button>`).join("")}${n(13)}
+        </span></div>
+      <div class="cam" style="aspect-ratio:${ar}">
+        <div class="grid"></div><div class="floor"></div>
+        <svg class="trail" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <polyline fill="none" stroke="#fff" stroke-opacity=".55" stroke-width=".5" stroke-dasharray="1.2 1.6" points="58,86 58,74 59,62 60,${m==="ready"?86:m==="auto"?40:48}"/>
+        </svg>
+        <div class="start-x" style="left:56%;top:84%">× <span style="font-size:9px">başlangıç</span></div>
+        ${n(8)}
+        <div class="robot ${m==="lost"?"lost":""}" style="left:50%;top:${m==="ready"?72:m==="auto"?30:38}%;transform:translateX(-25%)">ROBOT${n(7)}
+          <span class="conf">${m==="lost"?"zor görünüyor %31":"Robot görünüyor %92"}${n(12)}</span></div>
+        ${m==="lost"?`<div class="lost-banner">! Robot kayboldu</div>`:""}
+        <button class="dir" data-dircycle aria-label="Yön: ${dir}. Değiştirmek için tıklayın">${arrow}<b>${dir}</b>${n(9)}</button>
+        ${tall ? strip : ""}
+      </div>
+      ${tall ? "" : `<div style="padding:0 6px">${strip}</div>`}
+      ${m==="auto"?`<div class="box dashed small" style="margin:0 6px">Robot 2 s durağan kaldı: test otomatik bitirildi.</div>`:""}
+      <div style="padding:0 6px 8px">
+        ${m==="ready"?`<button class="btn primary">▶ Testi başlat</button>`
+          :m==="auto"?`<button class="btn primary" data-go="s6">Sonucu gör</button>`
+          :`<button class="btn primary">■ Testi bitir</button>`}${n(10)}
+      </div>
+    </div>`;
+  },
+  notes: [
+    "Kayıt göstergesi. Kayıt, ‘Testi başlat’ ile başlar ve başlangıç zaman damgası alınır.",
+    "Bağlantı rozeti (02 ile aynı eşikler).",
+    "Süre sayacı (dd:ss,o). Değerlendirmede ±2 s tolerans.",
+    "Pil yüzdesi ve şarj durumu (1 Hz).",
+    "Eğim (1 Hz). Kopmada son değer ‘eski’ etiketiyle kalır.",
+    "Hareket durumu: hareket ediyor / dönüyor / statik denge / toparlanma.",
+    "Takip kutusu robotla birlikte hareket eder.",
+    "Hareket izi ikincil öğedir: ince ve kesikli çizilir.",
+    "Yön göstergesi (zorunlu): sol kenarda, küçük ve dikey ortalı. Sahnenin ortasını kapatmaz. Tıklayınca İleri → Sağ → Geri → Sol → Duruyor döner.",
+    "Hazırda ‘Testi başlat’, kayıtta ‘Testi bitir’ (onay sorar), otomatik bitişte ‘Sonucu gör’.",
+    "Canlı mesafe: kalibrasyon ölçeğiyle hesaplanır, hedef aralıkla birlikte gösterilir.",
+    "Takip güveni: %60 altı ‘zor görünüyor’, robot 1 s bulunamazsa ‘Robot kayboldu’.",
+    "Görüntü oranı: 1:1 varsayılan; 4:3 ve 9:16 seçilebilir. 9:16'da bilgi şeridi görüntünün üstüne biner.",
+  ],
+},
+{
+  id: "s6", tab: "06 Sonuç", title: "06 · Sonuç",
+  lead: "Uygulama ölçütleri tek tek değerlendirir. Ölçülemeyen ölçüt KALDI sayılır; ara durum yoktur.",
+  states: [["pass","GEÇTİ"],["fail","KALDI"],["seal","Mühürleniyor"]],
+  render(s) {
+    if (s === "seal") return `<div class="screen" style="justify-content:center;text-align:center">
+      <div class="title">Sonuç hesaplanıyor</div>
+      <div class="box small" style="text-align:left">
+        <div class="check on">Ölçütler değerlendirildi</div>
+        <div class="check on">Video kaydı kapatıldı</div>
+        <div class="check">SHA-256 özeti hesaplanıyor</div>
+        <div class="check">Kayıt kilitleniyor</div>
+      </div>
+      <div class="small muted">Bu sırada uygulamayı kapatmayın.</div></div>`;
+    const pass = s === "pass";
+    const rows = pass
+      ? [["Yön","İleri","İleri","✓"],["Mesafe","0,97 m","0,8–1,2 m","✓"],["Son konum","durdu","robot durur","✓"]]
+      : [["Süre","24,6 s","30 s ±2","✕"],["Hareket","toparlanma","statik denge","✕"],["Eğim verisi","ölçülemedi","1 Hz","✕"]];
+    return `<div class="screen">
+      <div class="title">Test sonucu${n(1)}</div>
+      <div class="small muted">${pass?"Görev B · Robot Yönlendirmesi":"Görev A · Statik Denge"}<br>13.10.2026 14:32:05 → 14:32:19</div>
+      <div class="verdict ${pass?"":"fail"}"><b>${pass?"GEÇTİ":"KALDI"}</b>${pass?"3 / 3 ölçüt sağlandı":"0 / 3 ölçüt sağlandı"}${n(2)}</div>
+      <div class="group-label">Ölçütler${n(3)}</div>
+      <table><tr><th>Ölçüt</th><th>Ölçülen</th><th>Hedef</th><th class="r">Sonuç</th></tr>
+        ${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td class="muted">${r[2]}</td><td class="r">${r[3]}</td></tr>`).join("")}
+      </table>
+      ${pass?"":`<div class="box dashed small">Kaldı nedeni: 24,6 s'de denge bozuldu. Eğim verisi 2,4 s alınamadı.</div>`}
+      <div class="group-label">Kayıt${n(4)}</div>
+      <div class="box small">▶ Video · 00:14 + zaman damgalı olay kaydı</div>
+      <div class="small"><span class="chip solid">Kilitli</span> Kayıt mühürlendi${n(5)}<br><span class="muted">SHA-256 3f9a7c2e…91d0b41d</span></div>
+      <button class="btn primary" data-go="s7">Raporu aç</button>${n(6)}
+      <div class="btns"><button class="btn" data-go="s3">Yeni test</button><button class="btn" data-go="s2">Ana panel</button></div>
+    </div>`;
+  },
+  notes: [
+    "Görev, tarih ve başlangıç → bitiş zaman damgaları.",
+    "Büyük karar kutusu. KALDI kesikli çerçeveyle ayrışır (renge bağlı değil).",
+    "Her ölçüt: ölçülen, hedef, ✓/✕. Ölçülemeyen ölçüt ✕ (şartname: geçti = 5 / kaldı = 0).",
+    "Video ve olay kaydı rapora bağlanır.",
+    "Kilitli rozet ve SHA-256 özeti. Düzenle düğmesi yok.",
+    "Rapor detayına gider.",
+  ],
+},
+{
+  id: "s7", tab: "07 Raporlar", title: "07 · Rapor geçmişi ve detay",
+  lead: "Raporlar yalnız okunur. Silme ve düzenleme yoktur; bütünlük her açılışta yeniden doğrulanabilir.",
+  states: [["list","Liste"],["detail","Detay"]],
+  render(s) {
+    if (s === "list") {
+      const items = [["13.10.2026 14:40","A · Statik Denge","KALDI","c07e…f80c"],["13.10.2026 14:32","B · Robot Yönlendirmesi","GEÇTİ","3f9a…b41d"],
+        ["12.10.2026 16:05","C · Şarj Etme","GEÇTİ","8b11…02aa"],["12.10.2026 15:47","E · Bütünleşik Görev","KALDI (test kesildi)","41fe…9c3d"]];
+      return `<div class="screen">
+        <div class="bar"><span class="title"><span class="link" data-go="s2">←</span> Rapor geçmişi</span>${n(1)}</div>
+        <div class="small muted">12 rapor · en yeni üstte</div>
+        <div class="box list">${items.map(i=>`<div data-open style="cursor:pointer">
+          <div class="row small"><span>${i[0]}</span><span class="chip ${i[2]==="GEÇTİ"?"solid":""}">${i[2]}</span></div>
+          <div>${i[1]}</div><div class="small muted"><span class="chip">Kilitli</span> ${i[3]}</div></div>`).join("")}</div>
+        <div class="small muted">${n(2)} tarih · görev · karar · kilit özeti</div>
+      </div>`;
+    }
+    return `<div class="screen">
+      <div class="bar"><span class="title"><span class="link" data-back>←</span> Rapor · 14:32</span><span class="chip solid">Kilitli</span>${n(3)}</div>
+      <div class="small">Görev B · Robot Yönlendirmesi<br>14:32:05 → 14:32:19 · 14,2 s · <b>GEÇTİ (3/3)</b></div>
+      <div class="group-label">Video${n(4)}</div>
+      ${xbox("▶ 00:14", 120)}
+      <div class="small muted">olay işaretleri: 00:01 · 00:13 · 00:14</div>
+      <div class="group-label">Olay kaydı${n(5)}</div>
+      <div class="box small">00:00,0 Test başladı<br>00:01,3 hareket ediyor · İLERİ<br>00:13,1 statik denge<br>00:14,2 Bitiş: robot durdu<br><span class="muted">Telemetri: 15 paket, 0 kopma</span></div>
+      <div class="group-label">Doğrulama${n(6)}</div>
+      <div class="box small">SHA-256 3f9a7c2e5d10a8e4…c6f291d0b41d<br>Mühürlenme 13.10.2026 14:32:20<br>
+        <span class="link">Bütünlüğü doğrula</span> · ✓ değişmemiş</div>
+      <button class="btn primary">Dışa aktar (PDF + JSON)</button>${n(7)}
+    </div>`;
+  },
+  notes: [
+    "Liste: tarih, görev, karar ve kısa kilit özeti. Satıra tıklayınca detay açılır.",
+    "Silme düğmesi yok (değiştirilemezlik kuralı).",
+    "Detay başlığında kilitli rozeti.",
+    "Olay işaretli video oynatıcı.",
+    "Zaman damgalı olay kaydı ve telemetri özeti.",
+    "Bütünlüğü doğrula: SHA-256 yeniden hesaplanıp karşılaştırılır. Uyuşmazsa ‘değişmiş’ uyarısı.",
+    "Dışa aktarma biçimi ekip seçimi; öneri PDF (jüri için) + JSON (makine okunur).",
+  ],
+},
+];
+
+const FLOW = `01 Bağlantı ──► 02 Ana panel ──► 03 Görev seçimi ──► 04 Sahne ──► 05 Kamera + HUD ──► 06 Sonuç ──► 07 Rapor detayı
+     │                 ▲   │                                                        (otomatik bitiş       │
+     └── 07 Raporlar ◄─┘   └── 07 Raporlar                                           ya da Testi bitir)   └──► 03 / 02`;
+
+/* ---------- çizim ---------- */
+const tabs = document.getElementById("tabs");
+const main = document.getElementById("main");
+
+function renderTabs() {
+  const all = [["flow","Akış"], ...SCREENS.map(s=>[s.id, s.tab])];
+  tabs.innerHTML = `<span class="brand">CDTP · Modül D · wireframe</span>` +
+    all.map(([id,l])=>`<button role="tab" aria-selected="${state.tab===id}" data-tab="${id}">${l}</button>`).join("") +
+    `<span class="spacer"></span><button class="tool" id="toggleNotes">Notları ${document.body.classList.contains("no-notes")?"göster":"gizle"}</button>
+     <button class="tool" id="toggleTheme">Tema</button>`;
+}
+
+function renderScreen() {
+  if (state.tab === "flow") {
+    main.innerHTML = `<div class="screen-head"><h1>Ekranlar arası akış</h1>
+      <p>7 ekranın varsayılan durumu. Bir ekrana tıklayınca o ekranın durumları ve notları açılır.</p></div>
+      <div class="flowline">${FLOW}</div>
+      <div class="flow">${SCREENS.map(s=>`<div class="thumb" role="link" tabindex="0" data-tab="${s.id}">
+        <div class="frame" inert><div class="phone">${s.render(state[s.id])}</div></div>
+        <div class="cap"><b>${s.title}</b><span class="small muted">${s.states.length ? s.states.length + " durum" : "etkileşimli"}</span></div></div>`).join("")}</div>`;
+    return;
+  }
+  const s = SCREENS.find(x=>x.id===state.tab);
+  const cur = typeof state[s.id] === "object" ? state[s.id].mode : state[s.id];
+  main.innerHTML = `<div class="screen-head"><h1>${s.title}</h1><p>${s.lead}</p></div>
+    <div class="stage">
+      <div>
+        ${s.states.length ? `<div class="states" role="group" aria-label="Ekran durumu"><span class="label">Durum:</span>
+          ${s.states.map(([k,l])=>`<button data-state="${k}" aria-pressed="${cur===k}">${l}</button>`).join("")}</div>` : ""}
+        <div class="phone">${s.render(state[s.id])}</div>
+      </div>
+      <aside class="notes"><h2>Notlar</h2><ol>${s.notes.map((t,i)=>`<li>${n(i+1)}<span>${t}</span></li>`).join("")}</ol>
+        <div class="src">Kaynak: docs/wireframes/${{s1:"01-baglanti",s2:"02-ana-panel",s3:"03-gorev-secimi",s4:"04-kalibrasyon-sahne",s5:"05-kamera-hud",s6:"06-sonuc",s7:"07-rapor-gecmisi-ve-detay"}[s.id]}.md</div>
+      </aside>
+    </div>`;
+}
+
+function render() { renderTabs(); renderScreen(); }
+
+document.addEventListener("click", (e) => {
+  const t = e.target.closest("[data-tab],[data-go],[data-state],[data-task],[data-dir],[data-ratio],[data-dircycle],[data-open],[data-back],#toggleNotes,#toggleTheme");
+  if (!t) return;
+  if (t.id === "toggleNotes") { document.body.classList.toggle("no-notes"); return render(); }
+  if (t.id === "toggleTheme") {
+    const root = document.documentElement;
+    const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    root.dataset.theme = dark ? "light" : "dark"; return;
+  }
+  if (t.dataset.tab) state.tab = t.dataset.tab;
+  else if (t.dataset.go) state.tab = t.dataset.go;
+  else if (t.dataset.state) {
+    if (state.tab === "s5") state.s5.mode = t.dataset.state; else state[state.tab] = t.dataset.state;
+  }
+  else if (t.dataset.dir) { state.s3.dir = t.dataset.dir; e.stopPropagation(); }
+  else if (t.dataset.task) state.s3.task = t.dataset.task;
+  else if (t.dataset.ratio) state.s5.ratio = t.dataset.ratio;
+  else if ("dircycle" in t.dataset) state.s5.dir = (state.s5.dir + 1) % DIRS.length;
+  else if ("open" in t.dataset) state.s7 = "detail";
+  else if ("back" in t.dataset) state.s7 = "list";
+  render();
+  if (t.dataset.tab || t.dataset.go) { history.replaceState(null, "", "#" + state.tab); window.scrollTo(0, 0); }
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && e.target.classList.contains("thumb")) e.target.click();
+});
+
+/* #s5 gibi bir adresle doğrudan o ekran açılır */
+if (/^#(flow|s[1-7])$/.test(location.hash)) state.tab = location.hash.slice(1);
+render();
+</script>
+</body>
+</html>

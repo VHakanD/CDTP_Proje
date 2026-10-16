@@ -3,9 +3,9 @@
 YTÜ ÇDTP "İki Tekerlekli Ev İçi Hasta Destek Robotu" projesinin Modül D'si (robotu
 izleyen ve değerlendiren akıllı telefon uygulaması) için ASCII wireframe'ler.
 
-- Çerçeveden (framework) bağımsızdır; Flutter, Kotlin veya başka bir araçla uygulanabilir.
-- Renk, tema, yazı tipi ve kütüphane kararı **verilmemiştir**.
-- Robot–telefon bağlantı türü (BLE / Wi-Fi) belli olmadığı için yalnızca "bağlantı" denir.
+- Tıklanabilir HTML sürümü: [html/index.html](html/index.html) (tüm ekranlar tek dosyada, durum geçişleri ve notlarla).
+- Uygulama: Flutter (Android). Robot ve eldiven tarafında **ESP32-S3, Wi-Fi** kullanılır; telefon robota WebSocket ile bağlanır.
+- Kamera ekranı için **Varyant B** seçildi; yön göstergesi sol kenara alındı. Görüntü oranı 1:1 varsayılan, 4:3 ve 9:16 seçilebilir.
 - Kaynak: [Modül D README](../../README.md) (şartname §5.2 özeti).
 
 ## Ekranlar arası akış
@@ -81,30 +81,22 @@ Akışta gösterilmeyen genel geçişler:
 | `[KİLİTLİ]` | Mühürlenmiş, düzenlenemez kayıt |
 | `✓` / `✕` | Ölçüt geçti / kaldı |
 
-## Varsayımlar ve açık sorular
-Bkz. her ekran dosyasının "Durumlar" bölümü. Ekip kararı gerektirenler:
+## Kararlar (Cevaplar.md'ye göre)
+Açık soruların yanıtları; kaynak şartname ve tanıtım sunumu.
 
-1. **Bağlantı rozeti eşikleri:** `● ≤ 1,5 s`, `◐ 1,5–2 s`, `○ > 2 s` önerildi (1 Hz veri için).
-2. **Otomatik bitiş koşulları** (03'teki tablo) varsayımdır: ör. B için "robot belirli
-   süre durağan kalınca", A için "30 s dolunca ya da denge bozulunca". Süreler ve eşikler belirlenmeli.
-3. **"Süre ±2 s" ölçütünün yorumu:** A'da 30 s hedefine ±2 s tolerans mı (≥ 28 s geçer),
-   yoksa ölçülen sürenin doğruluğu mu? Wireframe'de "hedef: 30 s (±2 s)" olarak yazıldı.
-4. **"Doğru yön" referansı:** Uygulama beklenen yönü bilmeli. Görev B'de kullanıcının seçtiği
-   varsayıldı (03, öğe 3). Alternatif: eldiven komutunun robottan telemetriyle gelmesi.
-5. **Yön sınıflandırması kime göre:** Kameraya göre mi, robotun kendi önüne göre mi?
-   Kalibrasyonda robotun "önü" tanımlanmalı olabilir.
-6. **Hedef bölge (04, adım 4):** C ve E'deki "son konum" ölçütü için kullanıcının şarj
-   istasyonu / hedef bölgesini önizlemede çizdiği varsayıldı.
-7. **Yük durumu (E):** Kamerayla mı (kutu robotun üzerinde görünüyor mu), robottan gelen
-   bir sensörle mi algılanacak? Belirsiz.
-8. **Şarj tespiti 5 s (C):** 5 s'nin başlangıç anı (robotun istasyona varışı mı, test başlangıcı mı) belirlenmeli.
-9. **Ölçülemeyen ölçüt:** Sonuç KALDI sayıldı (06). Ayrı bir "GEÇERSİZ" kararı istenebilir.
-10. **Rapor silme:** "Elle değiştirilemez" kuralı gereği silme düğmesi konmadı. Depolama
-    dolarsa ne yapılacağı açık.
-11. **Doğrulama özeti:** Örnek olarak SHA-256 gösterildi; yöntem (hash zinciri, imzalı dosya
-    vb.) Modül D README'deki tasarım kararlarında seçilecek.
-12. **Dışa aktarma biçimi** (PDF, JSON, ZIP vb.) belirlenmedi.
-13. **Ölçek isteğe bağlılığı:** Piksel→metre ölçeği yalnızca B için zorunlu tutuldu (mesafe ölçütü).
-14. **Canlı mesafe ve takip güveni (ekip kararı):** Şartnamede HUD için istenmese de ikisi de
-    05'teki her iki varyanta eklendi. Takip güveni için "düşük" eşiği (ör. %60) ve
-    "kayboldu" sayılma süresi belirlenmeli.
+| # | Konu | Karar |
+| --- | --- | --- |
+| 1 | Bağlantı rozeti | Şartname yalnız 2 s kopma sınırını zorunlu tutar. Eşikler ekip seçimi: `≤ 1,5 s` bağlı, `1,5–2 s` gecikme, `> 2 s` koptu. |
+| 2 | Otomatik bitiş | A: 30 s dolunca ya da denge bozulunca. B: 0,8–1,2 m sonrası robot durunca. C: dock'a yerleşmeden sonra şarj başlayınca ya da 5 s aşılınca. E: hedefte 5 s bekleme + şarj başlangıcı. |
+| 3 | Süre ±2 s | Uygulamanın ölçtüğü süre ile hedef süre arasındaki tolerans. A'da 28–32 s penceresi geçerlidir; jüri kronometresi referanstır. |
+| 4 | Doğru yön | Görev B'de kullanıcı beklenen yönü seçer; kameradan algılanan yön bununla karşılaştırılır. |
+| 5 | Yön referansı | Şartname serbest bırakır. Uygulama kamera görüntüsüne göre sınıflar; robotun önü sahne hazırlamada başlangıç konumuyla tanımlanır. |
+| 6 | Hedef bölge | C: 30 cm / 90° yaklaşma bölgesi ve istasyon, E: hedef nokta; ikisi de sahne hazırlamada (04) çizilir. |
+| 7 | Yük durumu | Yöntem ekibe bırakılmış. Uygulama kamerayla kutunun robot üzerinde görünüp görünmediğine bakar; robot ileride bir sensör verisi gönderirse o da kullanılır. |
+| 8 | Şarj 5 s | 5 s, robotun dock'a oturup motorlarının durduğu anda başlar. |
+| 9 | Ölçülemeyen ölçüt | KALDI (0 puan). Ayrı bir "GEÇERSİZ" kategorisi yoktur. |
+| 10 | Rapor silme | Silme ve düzenleme yok. Depolama yönetimi mimari kararıdır. |
+| 11 | Mühürleme | SHA-256 hash zinciri (her rapor bir öncekinin özetini içerir). |
+| 12 | Dışa aktarma | Ekip seçimi: PDF (jüri için) + JSON (makine okunur). |
+| 13 | Ölçek | B ve E için zorunlu; 0,8–1,2 m mesafe ölçümü buna dayanır. |
+| 14 | Mesafe ve takip güveni | Ekibin eklediği HUD öğeleri. Eşikler: güven < %60 "zor görünüyor", robot 1 s bulunamazsa "kayboldu". |
