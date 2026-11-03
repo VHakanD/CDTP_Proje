@@ -1,4 +1,4 @@
-# Modül D · Mobil Uygulama Ekran Wireframe'leri
+﻿# Modül D · Mobil Uygulama Ekran Wireframe'leri
 
 YTÜ ÇDTP "İki Tekerlekli Ev İçi Hasta Destek Robotu" projesinin Modül D'si (robotu
 izleyen ve değerlendiren akıllı telefon uygulaması) için ASCII wireframe'ler.
@@ -98,5 +98,7 @@ Açık soruların yanıtları; kaynak şartname ve tanıtım sunumu.
 | 10 | Rapor silme | Silme ve düzenleme yok. Depolama yönetimi mimari kararıdır. |
 | 11 | Mühürleme | SHA-256 hash zinciri (her rapor bir öncekinin özetini içerir). |
 | 12 | Dışa aktarma | Ekip seçimi: PDF (jüri için) + JSON (makine okunur). |
+| 13 | Takip Yöntemi | ArUco (DICT_4X4 ID: 0) tespiti. Işıktan etkilenmez; yön açısını (θ) ve (x, y) konumunu optik olarak doğrudan verir. |
+| 14 | Görsel Dil & Renk Teorisi | 60-30-10 kuralı; açık medikal gri/beyaz zemin (#f8fafc, #ffffff), derin mavi (#1d4ed8), mat yeşil (#15803d); parlamasız sade mühendislik arayüzü, çok adımlı İleri/Geri navigasyonu. |
 | 13 | Ölçek | B ve E için zorunlu; 0,8–1,2 m mesafe ölçümü buna dayanır. |
 | 14 | Mesafe ve takip güveni | Ekibin eklediği HUD öğeleri. Eşikler: güven < %60 "zor görünüyor", robot 1 s bulunamazsa "kayboldu". |
