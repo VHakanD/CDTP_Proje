@@ -1,4 +1,4 @@
-# Modül D — Mobil İzleme ve Değerlendirme Uygulaması
+﻿# Modül D — Mobil İzleme ve Değerlendirme Uygulaması
 
 **Sorumlu bölüm:** Bilgisayar Müh.
 **Sorumlu kişiler:** _Hakan&Arda_ (2 kişi)
@@ -46,7 +46,7 @@ Telefon uygulamasıyla robotun şarj durumunu ve güncel eğim açısını göst
 | --- | --- | --- |
 | Platform / framework | Flutter (Android) · go_router · MVVM | `app/cdtp_monitor` |
 | Robot ↔ telefon bağlantısı | ESP32-S3 Wi-Fi, WebSocket JSON (protokol v1) | Eldiven ↔ robot: ESP-NOW önerisi |
-| Görüntü işleme yöntemi | Robot üstünde macenta renk işareti, telefonda YUV eşik + ağırlık merkezi | Robot olmadan: simülatör sahnesi |
+| Görüntü işleme yöntemi | Robot üstünde ArUco / AprilTag (DICT_4X4, ID:0), telefonda YUV (Y düzlemi) eşikleme + Quad tespiti + bit okuma | Işıktan etkilenmez; anlık robot açısını (heading) ve (x, y) konumunu verir |
 | Mesafe ölçeği | Zemindeki 1 m işaretin iki ucuna dokunma (P1–P2) | Sahne hazırlama ekranı |
 | Değiştirilemez kayıt | SHA-256 hash zinciri, yalnız ekleme | Dışa aktarma: JSON |
 | Kamera görünümü | HUD Varyant B, yön göstergesi sol kenarda; 1:1 varsayılan, 4:3 ve 9:16 seçilebilir | `docs/wireframes/html/` |

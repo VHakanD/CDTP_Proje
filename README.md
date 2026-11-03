@@ -1,4 +1,4 @@
-# CDTP_Proje — İki Tekerlekli Ev İçi Hasta Destek Robotu
+﻿# CDTP_Proje — İki Tekerlekli Ev İçi Hasta Destek Robotu
 
 YTÜ Elektrik-Elektronik Fakültesi · Çok Disiplinli Tasarım Projesi (ÇDTP) · 2026-2027 Güz
 
@@ -59,14 +59,37 @@ Kullanıcı ──(el/kol hareketi)──► Eldiven [B] ──(kablosuz komut)�
 
 ## Arayüzler (modüller arası sözleşme)
 
-Modüller arası veri formatı burada **tek yerde** tanımlanır; değişiklik önce burada konuşulur, sonra koda geçer.
+Modüller arası veri formatı ve haberleşme standartları burada tanımlanmıştır. Bilgisayar Mühendisliği (Modül D) veri tiplerini ve telemetri şemasını koordine eder.
 
-| Bağlantı | Veri | Sıklık | Format / protokol |
-| --- | --- | --- | --- |
-| B → A | Komut: ileri / geri / sol / sağ / dur | Olay bazlı, tepki ≤ 2 s | _belirlenecek_ |
-| A → D | Eğim açısı (°), hareket durumu | 1 Hz | _belirlenecek_ |
-| C → D | Şarj durumu, pil seviyesi (%) | 1 Hz | _belirlenecek_ |
-| C ↔ A | İstasyon IR sinyali, yaklaşma modu | Sürekli | _belirlenecek_ |
+| Bağlantı | Veri | Sıklık | Format / Protokol | Açıklama |
+| --- | --- | --- | --- | --- |
+| **B → A** (Eldiven → Robot) | Komut: `forward`, `backward`, `left`, `right`, `stop` | Olay bazlı (Değişimde) | **ESP-NOW** (veya BLE) | Düşük gecikmeli doğrudan komut; robot 2 s içinde tepki verir. Telefona uğramaz. |
+| **A → D** (Robot → Mobil) | Eğim açısı (°), Pil %, Şarj durumu, Robot durumu | **1 Hz** | **Wi-Fi SoftAP + WebSocket (JSON)** | Robot `192.168.4.1` SoftAP açar. Şartname §5.2 gereği bağlantı > 2 s kopamaz. |
+| **C → A** (İstasyon → Robot) | Güç / Şarj voltajı, IR kılavuz sinyali | Sürekli | Donanımsal temas pedleri + IR verici | İstasyon fiziksel güç verir; robot şarj entegresinden (CHG/STAT) şarjı algılar ve telemetriye yansıtır. |
+| **Kamera → D** (Kamera → Mobil) | Robot konumu (x, y), Yön açısı (θ), Kat edilen mesafe (m) | ~10–15 Hz | **Görüntü İşleme (ArUco ID: 0)** | Telefon kamerasından optik takip. Yön tespiti (ileri/geri/sağ/sol) ve 0.8–1.2 m mesafe ölçümü kamerayla yapılır. |
+
+### 1 Hz Telemetri JSON Şeması (Robot ESP32 → Mobil Uygulama)
+``json
+{
+  "type": "telemetry",
+  "seq": 105,
+  "uptime_ms": 105200,
+  "battery_pct": 82.5,
+  "tilt_deg": 1.4,
+  "charging": false,
+  "state": "moving",
+  "last_cmd": "forward",
+  "box_present": true,
+  "docked": false
+}
+``
+- **`tilt_deg` (Zorunlu):** Robot üzerindeki IMU'dan kestirilen anlık pitch eğim açısı (derece).
+- **`battery_pct` (Zorunlu):** Robot pil doluluk oranı (%0–100).
+- **`charging` (Zorunlu):** Şarj entegresinin donanımsal `CHG/STAT` pininden okunan mantıksal durum (`true`/`false`).
+- **`state` (Önerilir):** `idle`, `balancing`, `moving`, `turning`, `recovering`, `docked`, `fallen`.
+- **`last_cmd` (Önerilir):** Eldivenden alınan son geçerli hareket komutu.
+- **`box_present` (Önerilir):** İlaç kutusunun robot üzerinde olup olmadığı.
+- **`docked` (Önerilir):** Robotun şarj dock'una fiziksel temas edip etmediği.
 
 ## Takvim
 

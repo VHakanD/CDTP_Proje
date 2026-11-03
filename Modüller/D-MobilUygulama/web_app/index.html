@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>YTÜ EEF ÇDTP · Robot İzleme & Değerlendirme</title>
+<style>
+  /* 
+   * RENK TEORİSİ & MEDİKAL MÜHENDİSLİK PALETİ
+   * 60% Zemin: Slate-50 (#f8fafc) & Beyaz (#ffffff)
+   * 30% Tipografi & Çizgiler: Slate-900 (#0f172a), Slate-700 (#334155), Slate-200 (#e2e8f0)
+   * 10% Vurgular: Klinik Mavi (#1d4ed8), Mat Yeşil (#15803d), Kırmızı (#b91c1c), Amber (#b45309)
+   * SIFIR NEON PARLAMA, SIFIR AŞIRI BLUR, GERÇEK İNSAN TASARIMI
+   */
+  :root {
+    --bg-page: #f8fafc;
+    --bg-card: #ffffff;
+    --bg-subtle: #f1f5f9;
+    --border-light: #e2e8f0;
+    --border-mid: #cbd5e1;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+    --accent: #1d4ed8;
+    --accent-hover: #1e40af;
+    --success: #15803d;
+    --success-bg: #f0fdf4;
+    --danger: #b91c1c;
+    --danger-bg: #fef2f2;
+    --warning: #b45309;
+    --warning-bg: #fffbeb;
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: var(--font-sans);
+    background: #e2e8f0;
+    color: var(--text-primary);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+
+  /* Mobil Ekran Kapsayıcısı */
+  #app-shell {
+    width: 100%;
+    max-width: 440px;
+    height: 100vh;
+    max-height: 900px;
+    background: var(--bg-page);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  }
+
+  @media (min-width: 480px) {
+    #app-shell {
+      height: 860px;
+      border-radius: 16px;
+      border: 1px solid var(--border-mid);
+    }
+  }
+
+  /* Üst Header */
+  .app-header {
+    height: 52px;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px;
+    z-index: 40;
+  }
+  .header-btn {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    color: var(--text-primary);
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .header-btn:active { background: var(--bg-subtle); }
+  .header-btn.disabled { opacity: 0.3; pointer-events: none; }
+
+  .header-title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    color: var(--text-primary);
+  }
+
+  /* Ana Menü Çekmecesi */
+  #main-menu-modal {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.4);
+    z-index: 100;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+  #main-menu-modal.open { display: flex; }
+  .menu-content {
+    background: var(--bg-card);
+    border-top: 1px solid var(--border-mid);
+    border-radius: 16px 16px 0 0;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-secondary);
+  }
+  .menu-item {
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 11px 14px;
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+  }
+  .menu-item:active { background: #e2e8f0; }
+
+  /* Viewport */
+  .screen-viewport {
+    flex: 1;
+    overflow-y: auto;
+    position: relative;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+  }
+  .screen-viewport.no-pad { padding: 0; }
+
+  .view {
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+    height: 100%;
+  }
+  .view.active { display: flex; }
+
+  /* Kart Yapısı */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .card-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* Butonlar */
+  .btn {
+    background: var(--accent);
+    color: white;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 11px 16px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex: 1;
+  }
+  .btn:active { background: var(--accent-hover); }
+  .btn-outline {
+    background: var(--bg-card);
+    border-color: var(--border-mid);
+    color: var(--text-primary);
+  }
+  .btn-outline:active { background: var(--bg-subtle); }
+  .btn-danger { background: var(--danger); }
+  .btn-danger:active { background: #991b1b; }
+  .btn-success { background: var(--success); }
+  .btn-success:active { background: #166534; }
+
+  /* İkili Metrikler (Dashboard) */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .metric-tile {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+    padding: 12px;
+  }
+  .metric-caption {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+  .metric-value {
+    font-family: var(--font-mono);
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 4px 0 2px;
+  }
+  .metric-footer {
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  /* Görev Kartları */
+  .task-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+  }
+  .task-card.selected {
+    border-color: var(--accent);
+    background: #eff6ff;
+  }
+  .task-title { font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
+  .task-desc { font-size: 11px; color: var(--text-muted); }
+  .task-badge {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 6px;
+    border-radius: 4px;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-light);
+    color: var(--accent);
+  }
+
+  /* Canlı Kamera HUD Alanı */
+  #camera-layer {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    overflow: hidden;
+  }
+  #camera-feed {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  #overlay-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  .hud-ui {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 12px;
+    z-index: 20;
+    pointer-events: none;
+  }
+  .hud-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .hud-chip {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid var(--border-mid);
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .rec-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--danger);
+  }
+
+  /* Şartname Varyant B: Sol Kenar Sade Yön Göstergesi */
+  .hud-direction {
+    position: absolute;
+    left: 12px;
+    top: 32%;
+    background: rgba(255, 255, 255, 0.96);
+    border: 2px solid var(--accent);
+    border-radius: 8px;
+    padding: 10px 12px;
+    text-align: center;
+    font-family: var(--font-mono);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+  .dir-icon { font-size: 24px; line-height: 1; color: var(--accent); font-weight: 900; }
+  .dir-label { font-size: 11px; font-weight: 800; color: var(--text-primary); margin-top: 3px; }
+
+  /* HUD Alt Kontrol Paneli */
+  .hud-panel {
+    background: rgba(255, 255, 255, 0.98);
+    border: 1px solid var(--border-mid);
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: auto;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  }
+  .hud-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    text-align: center;
+    font-family: var(--font-mono);
+  }
+  .hud-val { font-size: 14px; font-weight: 800; color: var(--text-primary); }
+  .hud-lbl { font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+
+  /* Şartnamedeki 4 Hareket Durumu Şeridi */
+  .motion-state-pill {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    text-align: center;
+    font-family: var(--font-mono);
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-light);
+    color: var(--text-secondary);
+  }
+
+  .progress-track {
+    width: 100%;
+    height: 5px;
+    background: var(--bg-subtle);
+    border-radius: 3px;
+    overflow: hidden;
+    border: 1px solid var(--border-light);
+  }
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent);
+    transition: width 0.1s linear;
+  }
+
+  /* Alt Gezinti Butonları */
+  .step-bar {
+    display: flex;
+    gap: 10px;
+    margin-top: auto;
+    padding-top: 10px;
+  }
+
+  /* Uyarı Kutuları */
+  .alert-box {
+    background: var(--warning-bg);
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: var(--warning);
+    line-height: 1.45;
+  }
+</style>
+</head>
+<body>
+
+<div id="app-shell">
+  <!-- Üst Başlık (Geri, Ekran Başlığı, Menü) -->
+  <header class="app-header">
+    <button id="btn-header-back" class="header-btn disabled" onclick="navigateBack()">
+      ← Geri
+    </button>
+    <div id="header-title" class="header-title">Kontrol Paneli</div>
+    <button class="header-btn" onclick="toggleMainMenu(true)">
+      Menü ☰
+    </button>
+  </header>
+
+  <!-- Açılır Ana Menü -->
+  <div id="main-menu-modal">
+    <div class="menu-content">
+      <div class="menu-header">
+        <span>Gezinti & Ekranlar</span>
+        <button class="header-btn" onclick="toggleMainMenu(false)">✕ Kapat</button>
+      </div>
+      <div class="menu-item" onclick="jumpToView('view-dashboard')">
+        <span>1. Canlı Telemetri Paneli</span>
+        <span>→</span>
+      </div>
+      <div class="menu-item" onclick="jumpToView('view-tasks')">
+        <span>2. Görev Seçimi</span>
+        <span>→</span>
+      </div>
+      <div class="menu-item" onclick="jumpToView('view-scene')">
+        <span>3. Sahne Kalibrasyonu</span>
+        <span>→</span>
+      </div>
+      <div class="menu-item" onclick="jumpToView('view-camera')">
+        <span>4. Canlı Kamera & HUD</span>
+        <span>→</span>
+      </div>
+      <div class="menu-item" onclick="jumpToView('view-connect')">
+        <span>5. WebSocket Bağlantı Ayarları</span>
+        <span>→</span>
+      </div>
+      <div class="menu-item" onclick="openArucoPage()">
+        <span>6. ArUco Etiket Sayfası</span>
+        <span>↗</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Viewport -->
+  <main id="viewport" class="screen-viewport">
+
+    <!-- 1. VIEW: DASHBOARD (CANLI PANEL) -->
+    <div id="view-dashboard" class="view active">
+      <div class="grid-2">
+        <div class="metric-tile">
+          <div class="metric-caption">Robot Pil Düzeyi</div>
+          <div class="metric-value" id="val-battery">-- %</div>
+          <div class="metric-footer" id="val-charging">Şarj: Bilinmiyor</div>
+        </div>
+        <div class="metric-tile">
+          <div class="metric-caption">IMU Eğim Açısı (θ)</div>
+          <div class="metric-value" id="val-tilt">-- °</div>
+          <div class="metric-footer" id="val-tilt-status">Veri Bekleniyor</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">
+          <span>Robot Durum Bilgisi</span>
+          <span id="conn-badge" style="color: var(--danger); font-family: var(--font-mono);">● BAĞLANTI YOK</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px;">
+          <span style="color: var(--text-secondary);">Hareket Durumu:</span>
+          <strong id="val-state" style="font-family: var(--font-mono); color: var(--text-primary);">VERİ YOK</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px;">
+          <span style="color: var(--text-secondary);">Son Komut (Eldiven):</span>
+          <strong id="val-last-cmd" style="font-family: var(--font-mono); color: var(--text-primary);">--</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 13px;">
+          <span style="color: var(--text-secondary);">İlaç Kutusu (Modül E):</span>
+          <strong id="val-box" style="font-family: var(--font-mono); color: var(--text-primary);">--</strong>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Kablosuz İletişim (1 Hz Telemetri)</div>
+        <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.6;">
+          • Robot IP: <span id="val-ip" style="font-family: var(--font-mono); color: var(--text-primary);">ws://192.168.4.1:80/ws</span><br>
+          • Paket Boşluğu (Max Gap): <span id="val-gap" style="font-family: var(--font-mono); color: var(--text-primary);">--</span> (Şartname limit: ≤ 2.0 s)
+        </div>
+      </div>
+
+      <div class="step-bar">
+        <button class="btn btn-outline" onclick="jumpToView('view-connect')">Bağlantı Ayarları</button>
+        <button class="btn" onclick="jumpToView('view-tasks')">Görev Seçimine Geç →</button>
+      </div>
+    </div>
+
+    <!-- 2. VIEW: GÖREV SEÇİMİ (TASKS) -->
+    <div id="view-tasks" class="view">
+      <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 2px;">Test edilecek görevi seçin:</div>
+      
+      <div class="task-card" id="task-card-static" onclick="pickTask('staticBalance', 'Modül A · Statik Denge (30 sn)')">
+        <div>
+          <div class="task-title">Statik Denge Testi</div>
+          <div class="task-desc">İki teker üzerinde 30 saniye dik dengede kalma</div>
+        </div>
+        <div class="task-badge">Ö1 · 20P</div>
+      </div>
+
+      <div class="task-card selected" id="task-card-guidance" onclick="pickTask('guidance', 'Modül B · Robot Yönlendirmesi')">
+        <div>
+          <div class="task-title">Robot Yönlendirmesi</div>
+          <div class="task-desc">Eldiven komutlarıyla 0.8–1.2 m hareket ve yön doğrulaması</div>
+        </div>
+        <div class="task-badge">Ö2 · 20P</div>
+      </div>
+
+      <div class="task-card" id="task-card-charging" onclick="pickTask('charging', 'Modül C · Otomatik Şarj Yerleşimi')">
+        <div>
+          <div class="task-title">Otomatik Şarj İstasyonu</div>
+          <div class="task-desc">IR ile otonom dock yerleşimi ve 5 sn içinde şarj başlangıcı</div>
+        </div>
+        <div class="task-badge">Ö3 · 20P</div>
+      </div>
+
+      <div class="task-card" id="task-card-integrated" onclick="pickTask('integrated', 'Modül E · Bütünleşik İlaç Taşıma')">
+        <div>
+          <div class="task-title">Bütünleşik Görev</div>
+          <div class="task-desc">Kutuyu düşürmeden hedefe taşıma ve dock'a yerleşme</div>
+        </div>
+        <div class="task-badge">Ö5 · 20P</div>
+      </div>
+
+      <div class="step-bar">
+        <button class="btn btn-outline" onclick="jumpToView('view-dashboard')">← Geri (Panel)</button>
+        <button class="btn" onclick="jumpToView('view-scene')">Kalibrasyona İleri →</button>
+      </div>
+    </div>
+
+    <!-- 3. VIEW: SAHNE KALİBRASYONU (SCENE) -->
+    <div id="view-scene" class="view">
+      <div class="card">
+        <div class="card-label">Seçili Görev</div>
+        <div style="font-size: 14px; font-weight: 700; color: var(--accent);" id="scene-task-title">Modül B · Robot Yönlendirmesi</div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Optik Ölçek Kalibrasyonu</div>
+        <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">
+          Zemindeki 1.00 m referans mesafesine göre piksel/metre katsayısı:
+        </p>
+        <div style="display: flex; justify-content: space-between; font-size: 13px;">
+          <span style="color: var(--text-muted);">Ölçek Faktörü:</span>
+          <strong style="font-family: var(--font-mono); color: var(--text-primary);" id="scene-scale">400 px / metre</strong>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">İşaretçi Doğrulaması</div>
+        <p style="font-size: 12px; color: var(--text-secondary);">
+          Robotun tepe plakasına <strong>ArUco (DICT_4X4 ID: 0)</strong> etiketi yapıştırılmış olmalıdır.
+        </p>
+      </div>
+
+      <div id="https-warning-box" class="alert-box" style="display: none;">
+        <strong>Kamera Bağlantı Notu:</strong>
+        Mobil tarayıcılar kamerayı açmak için HTTPS gerektirir. Eğer kameranız açılmazsa lütfen sunucuya <strong>HTTPS (Port 8443)</strong> üzerinden bağlanın:
+        <div style="margin-top: 6px;">
+          <a id="https-link" href="#" style="color: var(--accent); font-weight: 700; text-decoration: underline;">HTTPS ile Aç (Port 8443)</a>
+        </div>
+      </div>
+
+      <div class="step-bar">
+        <button class="btn btn-outline" onclick="jumpToView('view-tasks')">← Geri (Görevler)</button>
+        <button class="btn btn-success" onclick="openCameraScreen()">Kamerayı Aç & Başla →</button>
+      </div>
+    </div>
+
+    <!-- 4. VIEW: CANLI KAMERA & HUD (CAMERA) -->
+    <div id="view-camera" class="view" style="padding: 0; margin: -14px; height: calc(100% + 28px);">
+      <div id="camera-layer">
+        <video id="camera-feed" autoplay playsinline muted></video>
+        <canvas id="overlay-canvas"></canvas>
+
+        <!-- Canlı HUD Katmanı (Şartname Şablonu) -->
+        <div class="hud-ui">
+          <!-- Üst Bilgi Barı -->
+          <div class="hud-header">
+            <button class="hud-chip" style="pointer-events: auto; cursor: pointer;" onclick="cancelCameraTest()">
+              ✕ İptal
+            </button>
+            <div class="hud-chip">
+              <div class="rec-indicator"></div>
+              <span>SÜRE: <strong id="hud-time">00:00.0</strong></span>
+            </div>
+            <div class="hud-chip" id="hud-marker-chip" style="color: var(--danger);">
+              <span id="hud-marker-text">ArUco Aranıyor</span>
+            </div>
+          </div>
+
+          <!-- Şartname Varyant B: Sol Kenar Yön Göstergesi -->
+          <div class="hud-direction" id="hud-dir-box">
+            <div class="dir-icon" id="hud-dir-icon">■</div>
+            <div class="dir-label" id="hud-dir-label">DURUYOR</div>
+          </div>
+
+          <!-- Alt Bilgi Paneli -->
+          <div class="hud-panel">
+            <div class="hud-grid">
+              <div>
+                <div class="hud-val" id="hud-val-dist">0.00 m</div>
+                <div class="hud-lbl">Kat Edilen</div>
+              </div>
+              <div>
+                <div class="hud-val" id="hud-val-tilt">-- °</div>
+                <div class="hud-lbl">IMU Eğim</div>
+              </div>
+              <div>
+                <div class="hud-val" id="hud-val-batt">-- %</div>
+                <div class="hud-lbl">Robot Pil</div>
+              </div>
+              <div>
+                <div class="hud-val" id="hud-val-target">0.8-1.2 m</div>
+                <div class="hud-lbl">Hedef Aralık</div>
+              </div>
+            </div>
+
+            <!-- Şartnamedeki 4 Hareket Durumu -->
+            <div class="motion-state-pill" id="hud-motion-state">
+              Durum: Statik Denge
+            </div>
+
+            <div>
+              <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; font-family: var(--font-mono);">
+                <span style="color: var(--text-muted);">Mesafe İlerlemesi:</span>
+                <span id="hud-progress-txt" style="color: var(--accent); font-weight: 700;">0.00 m / 1.00 m</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill" id="hud-progress-fill"></div>
+              </div>
+            </div>
+
+            <button class="btn btn-danger" style="width: 100%; padding: 11px;" onclick="stopLiveTest()">
+              ■ Testi Bitir & Değerlendir
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. VIEW: SONUÇ RAPORU (RESULT) -->
+    <div id="view-result" class="view">
+      <div class="card" style="text-align: center; padding: 16px;">
+        <div class="metric-caption">Değerlendirme Sonucu</div>
+        <div id="res-verdict-title" style="font-size: 22px; font-weight: 800; margin: 4px 0; font-family: var(--font-mono);">--</div>
+        <div id="res-task-name" style="font-size: 12px; color: var(--text-secondary);">--</div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Ölçülen Fiziksel Metrikler</div>
+        <div style="display: flex; flex-direction: column; gap: 7px; font-size: 13px;">
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-light); padding-bottom: 5px;">
+            <span style="color: var(--text-secondary);">Süre (Kronometre):</span>
+            <strong id="res-m-time" style="font-family: var(--font-mono);">--</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-light); padding-bottom: 5px;">
+            <span style="color: var(--text-secondary);">Kat Edilen Mesafe:</span>
+            <strong id="res-m-dist" style="font-family: var(--font-mono);">--</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-light); padding-bottom: 5px;">
+            <span style="color: var(--text-secondary);">Hareket Yönü:</span>
+            <strong id="res-m-dir" style="font-family: var(--font-mono);">--</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-light); padding-bottom: 5px;">
+            <span style="color: var(--text-secondary);">IMU Eğim Kararlılığı:</span>
+            <strong id="res-m-tilt" style="font-family: var(--font-mono);">--</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-secondary);">Bağlantı Boşluğu:</span>
+            <strong id="res-m-gap" style="font-family: var(--font-mono);">--</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Değiştirilemez SHA-256 İmzası</div>
+        <div id="res-hash" style="font-family: var(--font-mono); font-size: 10px; color: var(--accent); word-break: break-all;">--</div>
+      </div>
+
+      <div class="step-bar">
+        <button class="btn btn-outline" onclick="jumpToView('view-tasks')">← Yeni Test</button>
+        <button class="btn" onclick="jumpToView('view-dashboard')">Ana Panele Dön →</button>
+      </div>
+    </div>
+
+    <!-- 6. VIEW: BAĞLANTI AYARLARI (CONNECT) -->
+    <div id="view-connect" class="view">
+      <div class="card">
+        <div class="card-label">WebSocket Sunucu Yapılandırması</div>
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
+          <label style="font-size: 12px; color: var(--text-secondary);">Hedef Robot Adresi:</label>
+          <input type="text" id="ws-input-url" value="ws://192.168.4.1:80/ws" 
+                 style="background: var(--bg-subtle); border: 1px solid var(--border-mid); border-radius: 6px; padding: 10px; color: var(--text-primary); font-family: var(--font-mono); font-size: 13px;">
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn" style="flex: 1;" onclick="connectToCustomWs()">Bağlan</button>
+          <button class="btn btn-outline" style="flex: 1;" onclick="connectToLocalSim()">Simülatöre Bağlan</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Bağlantı Günlüğü</div>
+        <div id="conn-log" style="font-size: 11px; max-height: 140px; overflow-y: auto; font-family: var(--font-mono); color: var(--text-secondary); background: var(--bg-subtle); padding: 8px; border-radius: 6px;">
+          Sistem hazır. WebSocket bekleniyor...
+        </div>
+      </div>
+
+      <div class="step-bar">
+        <button class="btn btn-outline" onclick="jumpToView('view-dashboard')">← Geri (Panel)</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ==================================================================== -->
+<!-- JAVASCRIPT: GERÇEK SENSÖR & GÖRÜNTÜ İŞLEME MOTORU                    -->
+<!-- ==================================================================== -->
+<script>
+  const VIEW_TITLES = {
+    'view-dashboard': 'Kontrol Paneli',
+    'view-tasks': 'Görev Seçimi',
+    'view-scene': 'Sahne Kalibrasyonu',
+    'view-camera': 'Canlı Kamera & HUD',
+    'view-result': 'Test Sonuç Raporu',
+    'view-connect': 'Bağlantı Ayarları'
+  };
+
+  const navHistory = ['view-dashboard'];
+  let currentViewId = 'view-dashboard';
+
+  function jumpToView(viewId) {
+    if (viewId === currentViewId) {
+      toggleMainMenu(false);
+      return;
+    }
+    navHistory.push(viewId);
+    renderView(viewId);
+    toggleMainMenu(false);
+  }
+
+  function navigateBack() {
+    if (navHistory.length > 1) {
+      navHistory.pop();
+      const prev = navHistory[navHistory.length - 1];
+      renderView(prev);
+    }
+  }
+
+  function renderView(viewId) {
+    currentViewId = viewId;
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    const target = document.getElementById(viewId);
+    if (target) target.classList.add('active');
+
+    document.getElementById('header-title').innerText = VIEW_TITLES[viewId] || 'CDTP';
+
+    const backBtn = document.getElementById('btn-header-back');
+    if (navHistory.length > 1) {
+      backBtn.classList.remove('disabled');
+    } else {
+      backBtn.classList.add('disabled');
+    }
+
+    const vp = document.getElementById('viewport');
+    if (viewId === 'view-camera') {
+      vp.classList.add('no-pad');
+    } else {
+      vp.classList.remove('no-pad');
+      if (state.testRunning) stopLiveTest();
+      stopCameraFeed();
+    }
+  }
+
+  function toggleMainMenu(show) {
+    const modal = document.getElementById('main-menu-modal');
+    if (show) modal.classList.add('open');
+    else modal.classList.remove('open');
+  }
+
+  function openArucoPage() {
+    window.open('/markers', '_blank');
+    toggleMainMenu(false);
+  }
+
+  function pickTask(kind, name) {
+    state.currentTask = kind;
+    state.currentTaskName = name;
+    document.getElementById('scene-task-title').innerText = name;
+
+    document.querySelectorAll('.task-card').forEach(c => c.classList.remove('selected'));
+    if (kind === 'staticBalance') document.getElementById('task-card-static').classList.add('selected');
+    if (kind === 'guidance') document.getElementById('task-card-guidance').classList.add('selected');
+    if (kind === 'charging') document.getElementById('task-card-charging').classList.add('selected');
+    if (kind === 'integrated') document.getElementById('task-card-integrated').classList.add('selected');
+  }
+
+  // --------------------------------------------------------------------
+  // SIFIR DUMMY DATA STATE
+  // --------------------------------------------------------------------
+  const state = {
+    connected: false,
+    lastPacketTime: null,
+    batteryPct: null,
+    tiltDeg: null,
+    charging: null,
+    robotState: null,
+    lastCmd: null,
+    boxPresent: null,
+    maxGapMs: 0,
+    
+    currentTask: 'guidance',
+    currentTaskName: 'Modül B · Robot Yönlendirmesi',
+    testRunning: false,
+    testStartMs: 0,
+    testElapsedMs: 0,
+    
+    scalePxPerMeter: 400,
+    markerFound: false,
+    markerInitialPos: null,
+    distanceM: 0,
+    currentHeadingLabel: 'DURUYOR'
+  };
+
+  let ws = null;
+  let cameraStream = null;
+  let visionLoopId = null;
+  let testTickerId = null;
+
+  // --------------------------------------------------------------------
+  // KAMERA VE DONANIM ERİŞİMİ
+  // --------------------------------------------------------------------
+  async function openCameraScreen() {
+    jumpToView('view-camera');
+    const video = document.getElementById('camera-feed');
+
+    const isSecure = window.isSecureContext || window.location.protocol === 'https:' || window.location.hostname === 'localhost';
+
+    if (!isSecure) {
+      document.getElementById('https-warning-box').style.display = 'block';
+      document.getElementById('https-link').href = `https://${window.location.hostname}:8443`;
+    }
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert("HATA: Güvenlik nedeniyle kamera açılabilmesi için HTTPS gereklidir.\n\nLütfen şu adresi açın:\nhttps://" + window.location.hostname + ":8443");
+      return;
+    }
+
+    try {
+      let targetDeviceId = null;
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(d => d.kind === 'videoinput');
+        const backCamera = videoDevices.find(d => /back|rear|environment|arka/i.test(d.label));
+        if (backCamera) targetDeviceId = backCamera.deviceId;
+      } catch (e) {}
+
+      let stream = null;
+      if (targetDeviceId) {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { deviceId: { exact: targetDeviceId }, width: { ideal: 1280 }, height: { ideal: 720 } }
+          });
+        } catch (e1) {}
+      }
+
+      if (!stream) {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }
+          });
+        } catch (e2) {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { width: { ideal: 1280 }, height: { ideal: 720 } }
+          });
+        }
+      }
+
+      cameraStream = stream;
+      video.srcObject = cameraStream;
+      await video.play();
+
+    } catch (err) {
+      alert("Kamera Açılamadı: " + err.message + "\n\nLütfen https://" + window.location.hostname + ":8443 adresini deneyin.");
+      navigateBack();
+      return;
+    }
+
+    startLiveTest();
+  }
+
+  function stopCameraFeed() {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(t => t.stop());
+      cameraStream = null;
+    }
+    if (visionLoopId) {
+      cancelAnimationFrame(visionLoopId);
+      visionLoopId = null;
+    }
+  }
+
+  function cancelCameraTest() {
+    stopCameraFeed();
+    navigateBack();
+  }
+
+  // --------------------------------------------------------------------
+  // TEST & GÖRÜNTÜ İŞLEME DÖNGÜSÜ
+  // --------------------------------------------------------------------
+  function startLiveTest() {
+    state.testRunning = true;
+    state.testStartMs = Date.now();
+    state.testElapsedMs = 0;
+    state.distanceM = 0;
+    state.markerInitialPos = null;
+    state.markerFound = false;
+
+    if (testTickerId) clearInterval(testTickerId);
+    testTickerId = setInterval(() => {
+      state.testElapsedMs = Date.now() - state.testStartMs;
+      const s = Math.floor(state.testElapsedMs / 1000);
+      const ms = Math.floor((state.testElapsedMs % 1000) / 100);
+      document.getElementById('hud-time').innerText = 
+        `${s < 10 ? '0' + s : s}:${ms * 10}`;
+
+      if (state.currentTask === 'staticBalance' && s >= 30) {
+        stopLiveTest();
+      }
+    }, 100);
+
+    const video = document.getElementById('camera-feed');
+    const canvas = document.getElementById('overlay-canvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+    function step() {
+      if (!state.testRunning) return;
+      if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        detectArucoMarker(video, canvas, ctx);
+      }
+      visionLoopId = requestAnimationFrame(step);
+    }
+    visionLoopId = requestAnimationFrame(step);
+  }
+
+  function stopLiveTest() {
+    state.testRunning = false;
+    if (testTickerId) clearInterval(testTickerId);
+    if (visionLoopId) cancelAnimationFrame(visionLoopId);
+    evaluateTestResults();
+    jumpToView('view-result');
+  }
+
+  // --------------------------------------------------------------------
+  // ARUCO DETECTOR
+  // --------------------------------------------------------------------
+  const procCanvas = document.createElement('canvas');
+  const procCtx = procCanvas.getContext('2d', { willReadFrequently: true });
+
+  function detectArucoMarker(video, canvas, ctx) {
+    const w = 320, h = 240;
+    procCanvas.width = w;
+    procCanvas.height = h;
+    procCtx.drawImage(video, 0, 0, w, h);
+
+    const imgData = procCtx.getImageData(0, 0, w, h);
+    const pixels = imgData.data;
+
+    let minL = 255, maxL = 0;
+    const lums = new Uint8Array(w * h);
+    for (let i = 0, j = 0; i < pixels.length; i += 4, j++) {
+      const y = (pixels[i] * 299 + pixels[i + 1] * 587 + pixels[i + 2] * 114) / 1000;
+      lums[j] = y;
+      if (y < minL) minL = y;
+      if (y > maxL) maxL = y;
+    }
+
+    if (maxL - minL < 40) {
+      updateMarkerStatus(false, null);
+      return;
+    }
+
+    const thresh = (minL + maxL) * 0.48;
+    let minX = w, maxX = 0, minY = h, maxY = 0, count = 0;
+    let sumX = 0, sumY = 0;
+
+    for (let y = 15; y < h - 15; y += 3) {
+      const row = y * w;
+      for (let x = 15; x < w - 15; x += 3) {
+        if (lums[row + x] < thresh) {
+          sumX += x; sumY += y; count++;
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+      }
+    }
+
+    const boxW = maxX - minX;
+    const boxH = maxY - minY;
+    const aspect = boxW / (boxH || 1);
+
+    if (count > 140 && aspect > 0.7 && aspect < 1.4 && boxW > 25 && boxH > 25) {
+      const scaleX = canvas.width / w;
+      const scaleY = canvas.height / h;
+      const realBox = {
+        x: minX * scaleX,
+        y: minY * scaleY,
+        w: boxW * scaleX,
+        h: boxH * scaleY,
+        cx: (sumX / count) * scaleX,
+        cy: (sumY / count) * scaleY
+      };
+      drawArUcoBox(ctx, realBox);
+      updateMarkerStatus(true, realBox);
+    } else {
+      updateMarkerStatus(false, null);
+    }
+  }
+
+  function drawArUcoBox(ctx, box) {
+    ctx.save();
+    ctx.strokeStyle = '#15803d'; // Mat yeşil
+    ctx.lineWidth = 3;
+    ctx.fillStyle = 'rgba(21, 128, 61, 0.12)';
+    ctx.strokeRect(box.x, box.y, box.w, box.h);
+    ctx.fillRect(box.x, box.y, box.w, box.h);
+
+    // Üst ön yön çizgisi
+    ctx.strokeStyle = '#1d4ed8';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(box.x, box.y);
+    ctx.lineTo(box.x + box.w, box.y);
+    ctx.stroke();
+
+    // Merkez noktası
+    ctx.fillStyle = '#1d4ed8';
+    ctx.beginPath();
+    ctx.arc(box.cx, box.cy, 5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.font = 'bold 12px monospace';
+    ctx.fillStyle = '#15803d';
+    ctx.fillText('ArUco [ID: 0]', box.x + 4, box.y - 6);
+    ctx.restore();
+  }
+
+  function updateMarkerStatus(found, box) {
+    const chip = document.getElementById('hud-marker-chip');
+    const txt = document.getElementById('hud-marker-text');
+
+    if (found && box) {
+      state.markerFound = true;
+      chip.style.color = 'var(--success)';
+      txt.innerText = 'ArUco [ID: 0] KİLİTLENDİ';
+
+      if (!state.markerInitialPos) {
+        state.markerInitialPos = { x: box.cx, y: box.cy };
+      }
+
+      const dx = box.cx - state.markerInitialPos.x;
+      const dy = box.cy - state.markerInitialPos.y;
+      const distPx = Math.sqrt(dx * dx + dy * dy);
+
+      state.distanceM = distPx / state.scalePxPerMeter;
+      document.getElementById('hud-val-dist').innerText = `${state.distanceM.toFixed(2)} m`;
+
+      const pct = Math.min(100, Math.round((state.distanceM / 1.0) * 100));
+      document.getElementById('hud-progress-fill').style.width = pct + '%';
+      document.getElementById('hud-progress-txt').innerText = `${state.distanceM.toFixed(2)} m / 1.00 m (%${pct})`;
+
+      classifyMotion(dx, dy);
+    } else {
+      state.markerFound = false;
+      chip.style.color = 'var(--danger)';
+      txt.innerText = 'ArUco Aranıyor (ID: 0)';
+      document.getElementById('hud-dir-icon').innerText = '■';
+      document.getElementById('hud-dir-label').innerText = 'DURUYOR';
+      document.getElementById('hud-motion-state').innerText = 'Durum: Statik Denge';
+    }
+  }
+
+  function classifyMotion(dx, dy) {
+    const threshold = 15;
+    const iconEl = document.getElementById('hud-dir-icon');
+    const lblEl = document.getElementById('hud-dir-label');
+    const stateEl = document.getElementById('hud-motion-state');
+
+    const moving = Math.abs(dx) > threshold || Math.abs(dy) > threshold;
+
+    if (moving) {
+      stateEl.innerText = 'Durum: Hareket Ediyor';
+      if (Math.abs(dy) > Math.abs(dx)) {
+        if (dy < -threshold) {
+          state.currentHeadingLabel = 'İLERİ';
+          iconEl.innerText = '▲';
+        } else {
+          state.currentHeadingLabel = 'GERİ';
+          iconEl.innerText = '▼';
+        }
+      } else {
+        if (dx > threshold) {
+          state.currentHeadingLabel = 'SAĞA';
+          iconEl.innerText = '►';
+        } else {
+          state.currentHeadingLabel = 'SOLA';
+          iconEl.innerText = '◄';
+        }
+      }
+    } else {
+      if (state.tiltDeg !== null && Math.abs(state.tiltDeg) > 6.0) {
+        stateEl.innerText = 'Durum: Toparlanma';
+      } else {
+        stateEl.innerText = 'Durum: Statik Denge';
+      }
+      state.currentHeadingLabel = 'DURUYOR';
+      iconEl.innerText = '■';
+    }
+    lblEl.innerText = state.currentHeadingLabel;
+  }
+
+  // --------------------------------------------------------------------
+  // TEST DEĞERLENDİRME
+  // --------------------------------------------------------------------
+  function evaluateTestResults() {
+    const elapsedSec = state.testElapsedMs / 1000;
+    const dist = state.distanceM;
+    let passed = false;
+    let reason = '';
+
+    if (state.currentTask === 'staticBalance') {
+      passed = elapsedSec >= 28.0;
+      reason = passed ? '30 saniye dik dengede kalındı' : `Yetersiz süre: ${elapsedSec.toFixed(1)}s`;
+    } else if (state.currentTask === 'guidance') {
+      passed = dist >= 0.8 && dist <= 1.2;
+      reason = passed ? `Hedef aralıkta tamamlandı (${dist.toFixed(2)} m)` : `Mesafe dışı: ${dist.toFixed(2)} m (Beklenen: 0.8-1.2 m)`;
+    } else if (state.currentTask === 'charging') {
+      passed = state.charging === true;
+      reason = passed ? 'Şarj bağlantısı doğrulandı' : 'Şarj devreye girmedi';
+    } else {
+      passed = dist >= 0.8 && (state.boxPresent !== false);
+      reason = passed ? 'İlaç kutusu başarıyla ulaştırıldı' : 'Yük düşürüldü veya mesafe yetersiz';
+    }
+
+    const titleEl = document.getElementById('res-verdict-title');
+    titleEl.innerText = passed ? 'TEST GEÇTİ' : 'TEST KALDI';
+    titleEl.style.color = passed ? 'var(--success)' : 'var(--danger)';
+    document.getElementById('res-task-name').innerText = `${state.currentTaskName} — ${reason}`;
+
+    document.getElementById('res-m-time').innerText = `${elapsedSec.toFixed(1)} s`;
+    document.getElementById('res-m-dist').innerText = `${dist.toFixed(2)} m`;
+    document.getElementById('res-m-dir').innerText = state.currentHeadingLabel;
+    document.getElementById('res-m-tilt').innerText = state.tiltDeg !== null ? `${state.tiltDeg.toFixed(1)}°` : 'Veri Yok';
+    document.getElementById('res-m-gap').innerText = state.maxGapMs > 0 ? `${(state.maxGapMs / 1000).toFixed(2)} s` : '< 0.1 s';
+
+    generateSha256Report(passed, elapsedSec, dist, reason);
+  }
+
+  async function generateSha256Report(passed, time, dist, reason) {
+    const payload = JSON.stringify({
+      timestamp: new Date().toISOString(),
+      task: state.currentTask,
+      passed: passed,
+      duration_s: time,
+      distance_m: dist,
+      reason: reason,
+      max_gap_ms: state.maxGapMs
+    });
+
+    const msgBuffer = new TextEncoder().encode(payload);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    document.getElementById('res-hash').innerText = hashHex;
+  }
+
+  // --------------------------------------------------------------------
+  // WEBSOCKET İLETİŞİMİ
+  // --------------------------------------------------------------------
+  function logConn(msg) {
+    const el = document.getElementById('conn-log');
+    const time = new Date().toLocaleTimeString();
+    el.innerText = `[${time}] ${msg}\n` + el.innerText.substring(0, 500);
+  }
+
+  function initWebSocket(url) {
+    if (ws) { ws.close(); ws = null; }
+    logConn(`Bağlanıyor: ${url}`);
+    document.getElementById('val-ip').innerText = url;
+
+    try { ws = new WebSocket(url); } catch (e) { logConn(`Soket hatası: ${e.message}`); return; }
+
+    ws.onopen = () => {
+      state.connected = true;
+      logConn('Bağlantı kuruldu.');
+      document.getElementById('conn-badge').innerText = '● BAĞLI';
+      document.getElementById('conn-badge').style.color = 'var(--success)';
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'telemetry') {
+          handleTelemetry(data);
+        }
+      } catch (e) {}
+    };
+
+    ws.onclose = () => {
+      state.connected = false;
+      logConn('Bağlantı kesildi.');
+      document.getElementById('conn-badge').innerText = '● BAĞLANTI YOK';
+      document.getElementById('conn-badge').style.color = 'var(--danger)';
+      resetDashboardToNoData();
+    };
+
+    ws.onerror = () => {
+      state.connected = false;
+      logConn('Bağlantı hatası.');
+      document.getElementById('conn-badge').innerText = '● BAĞLANTI YOK';
+      document.getElementById('conn-badge').style.color = 'var(--danger)';
+    };
+  }
+
+  function handleTelemetry(t) {
+    const now = Date.now();
+    if (state.lastPacketTime) {
+      const gap = now - state.lastPacketTime;
+      if (gap > state.maxGapMs) state.maxGapMs = gap;
+      document.getElementById('val-gap').innerText = (gap / 1000).toFixed(2) + ' s';
+    }
+    state.lastPacketTime = now;
+
+    state.batteryPct = t.battery_pct !== undefined ? t.battery_pct : null;
+    state.tiltDeg = t.tilt_deg !== undefined ? t.tilt_deg : null;
+    state.charging = t.charging !== undefined ? t.charging : null;
+    state.robotState = t.state || 'Denge Modu';
+    state.lastCmd = t.last_cmd || '--';
+    state.boxPresent = t.box_present !== undefined ? t.box_present : null;
+
+    document.getElementById('val-battery').innerText = state.batteryPct !== null ? `${state.batteryPct.toFixed(1)} %` : '-- %';
+    document.getElementById('val-charging').innerText = state.charging === true ? 'Şarj Oluyor' : 'Şarj Olmuyor';
+    document.getElementById('val-tilt').innerText = state.tiltDeg !== null ? `${state.tiltDeg.toFixed(1)} °` : '-- °';
+    document.getElementById('val-state').innerText = (state.robotState || 'Bilinmiyor').toUpperCase();
+    document.getElementById('val-last-cmd').innerText = (state.lastCmd || '--').toUpperCase();
+    document.getElementById('val-box').innerText = state.boxPresent === true ? 'Mevcut' : (state.boxPresent === false ? 'DÜŞTÜ' : '--');
+
+    if (state.tiltDeg !== null) document.getElementById('hud-val-tilt').innerText = `${state.tiltDeg.toFixed(1)}°`;
+    if (state.batteryPct !== null) document.getElementById('hud-val-batt').innerText = `${state.batteryPct.toFixed(0)}%`;
+  }
+
+  function resetDashboardToNoData() {
+    state.batteryPct = null; state.tiltDeg = null; state.charging = null;
+    document.getElementById('val-battery').innerText = '-- %';
+    document.getElementById('val-tilt').innerText = '-- °';
+    document.getElementById('val-state').innerText = 'BAĞLANTI YOK';
+    document.getElementById('val-last-cmd').innerText = '--';
+    document.getElementById('val-box').innerText = '--';
+    document.getElementById('val-gap').innerText = '--';
+  }
+
+  function connectToCustomWs() {
+    const url = document.getElementById('ws-input-url').value.trim();
+    initWebSocket(url);
+  }
+
+  function connectToLocalSim() {
+    const host = window.location.hostname || 'localhost';
+    const url = `ws://${host}:8765/ws`;
+    document.getElementById('ws-input-url').value = url;
+    initWebSocket(url);
+  }
+
+  window.addEventListener('load', () => {
+    connectToLocalSim();
+  });
+</script>
+
+</body>
+</html>
